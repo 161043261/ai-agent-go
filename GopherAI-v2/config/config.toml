@@ -4,17 +4,17 @@ host = "0.0.0.0"
 port = 9090
 
 [redisConfig]
-enabled = true    # 是否启用 Redis，设为 false 则使用内存缓存 BigCache
+enabled = false    # 是否启用 Redis，设为 false 则使用内存缓存 BigCache
 host = "127.0.0.1"
 port = 6379
 password = ""
 db = 0
 
 [mysqlConfig]
-host = "127.0.0.1"
+host = "localhost"
 port = 3306
 user = "root"
-password = "123456"
+password = "0406"
 databaseName = "GopherAI"
 charset =  "utf8mb4"
 
