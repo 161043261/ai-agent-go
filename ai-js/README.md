@@ -1,5 +1,7 @@
 # AI-JS
-
+```bash
+pnpm exec prisma generate 
+```
 GopherAI 的 JavaScript/TypeScript 重构版本 - AI 聊天平台
 
 ## 技术栈

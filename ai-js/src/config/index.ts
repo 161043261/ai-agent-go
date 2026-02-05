@@ -36,12 +36,6 @@ function loadConfig(): AppConfig {
       apiKey: process.env.OPENAI_API_KEY || '',
       baseUrl: process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     },
-    image: {
-      enabled: process.env.IMAGE_ENABLED !== 'false',
-      onnxRuntimeLib: process.env.ONNX_RUNTIME_LIB || '',
-      modelPath: process.env.IMAGE_MODEL_PATH || './models/mobilenetv2-7.onnx',
-      labelPath: process.env.IMAGE_LABEL_PATH || './models/synset.txt',
-    },
   };
 }
 

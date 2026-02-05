@@ -1,91 +1,78 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
-
-	"github.com/BurntSushi/toml"
+	"os"
 )
 
 type MainConfig struct {
-	Port    int    `toml:"port"`
-	AppName string `toml:"appName"`
-	Host    string `toml:"host"`
+	Port    int    `json:"port"`
+	AppName string `json:"appName"`
+	Host    string `json:"host"`
 }
 
 type RedisConfig struct {
-	RedisEnabled  bool   `toml:"enabled"`  // 是否启用 Redis
-	RedisPort     int    `toml:"port"`
-	RedisDb       int    `toml:"db"`
-	RedisHost     string `toml:"host"`
-	RedisPassword string `toml:"password"`
+	RedisEnabled        bool   `json:"enabled"`         // 是否启用 Redis
+	RedisPort           int    `json:"port"`
+	RedisDb             int    `json:"db"`
+	RedisHost           string `json:"host"`
+	RedisPassword       string `json:"password"`
+	IndexName           string `json:"indexName"`       // Redis 索引名称模板
+	IndexNamePrefix     string `json:"indexNamePrefix"` // Redis 索引名称前缀模板
 }
 
 type MysqlConfig struct {
-	MysqlPort         int    `toml:"port"`
-	MysqlHost         string `toml:"host"`
-	MysqlUser         string `toml:"user"`
-	MysqlPassword     string `toml:"password"`
-	MysqlDatabaseName string `toml:"databaseName"`
-	MysqlCharset      string `toml:"charset"`
+	MysqlPort         int    `json:"port"`
+	MysqlHost         string `json:"host"`
+	MysqlUser         string `json:"user"`
+	MysqlPassword     string `json:"password"`
+	MysqlDatabaseName string `json:"databaseName"`
+	MysqlCharset      string `json:"charset"`
 }
 
 type JwtConfig struct {
-	ExpireDuration int    `toml:"expire_duration"`
-	Issuer         string `toml:"issuer"`
-	Subject        string `toml:"subject"`
-	Key            string `toml:"key"`
+	ExpireDuration int    `json:"expire_duration"`
+	Issuer         string `json:"issuer"`
+	Subject        string `json:"subject"`
+	Key            string `json:"key"`
 }
 
 type RagModelConfig struct {
-	RagEmbeddingModel string `toml:"embeddingModel"`
-	RagChatModelName  string `toml:"chatModelName"`
-	RagDocDir         string `toml:"docDir"`
-	RagBaseUrl        string `toml:"baseUrl"`
-	RagDimension      int    `toml:"dimension"`
-}
-
-type ImageConfig struct {
-	Enabled        bool   `toml:"enabled"`        // 是否启用图像识别功能
-	OnnxRuntimeLib string `toml:"onnxRuntimeLib"` // ONNX Runtime 动态库路径
-	ModelPath      string `toml:"modelPath"`      // 模型文件路径
-	LabelPath      string `toml:"labelPath"`      // 标签文件路径
+	RagEmbeddingModel string `json:"embeddingModel"`
+	RagChatModelName  string `json:"chatModelName"`
+	RagDocDir         string `json:"docDir"`
+	RagBaseUrl        string `json:"baseUrl"`
+	RagDimension      int    `json:"dimension"`
 }
 
 type Config struct {
-	RedisConfig    `toml:"redisConfig"`
-	MysqlConfig    `toml:"mysqlConfig"`
-	JwtConfig      `toml:"jwtConfig"`
-	MainConfig     `toml:"mainConfig"`
-	RagModelConfig `toml:"ragModelConfig"`
-	ImageConfig    `toml:"imageConfig"`
+	RedisConfig    RedisConfig    `json:"redisConfig"`
+	MysqlConfig    MysqlConfig    `json:"mysqlConfig"`
+	JwtConfig      JwtConfig      `json:"jwtConfig"`
+	MainConfig     MainConfig     `json:"mainConfig"`
+	RagModelConfig RagModelConfig `json:"ragModelConfig"`
 }
 
-type RedisKeyConfig struct {
-	IndexName       string
-	IndexNamePrefix string
+// config 全局配置实例，在 init() 中初始化
+var config = &Config{
+	RedisConfig: RedisConfig{
+		IndexName:       "rag_docs:%s:idx",
+		IndexNamePrefix: "rag_docs:%s:",
+	},
 }
 
-var DefaultRedisKeyConfig = RedisKeyConfig{
-	IndexName:       "rag_docs:%s:idx",
-	IndexNamePrefix: "rag_docs:%s:",
-}
-
-var config *Config
-
-// InitConfig 初始化项目配置
-func InitConfig() error {
-	// 设置配置文件路径（相对于 main.go 所在的目录）
-	if _, err := toml.DecodeFile("config/config.toml", config); err != nil {
-		log.Fatal(err.Error())
-		return err
+func init() {
+	data, err := os.ReadFile("config/config.json")
+	if err != nil {
+		log.Fatal("读取配置文件失败: ", err.Error())
 	}
-	return nil
+	if err := json.Unmarshal(data, config); err != nil {
+		log.Fatal("解析配置文件失败: ", err.Error())
+	}
 }
 
+// GetConfig 获取全局配置
 func GetConfig() *Config {
-	if config == nil {
-		config = new(Config)
-		_ = InitConfig()
-	}
 	return config
 }

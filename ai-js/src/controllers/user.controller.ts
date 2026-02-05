@@ -38,8 +38,8 @@ export async function userController(app: FastifyInstance): Promise<void> {
 
       // 生成 JWT Token
       const token = app.jwt.sign({
-        id: result.userId,
-        username: result.username,
+        id: result.userId!,
+        username: result.username!,
       });
 
       return reply.send({
@@ -80,8 +80,8 @@ export async function userController(app: FastifyInstance): Promise<void> {
 
       // 生成 JWT Token
       const token = app.jwt.sign({
-        id: result.userId,
-        username: result.username,
+        id: result.userId!,
+        username: result.username!,
       });
 
       return reply.send({

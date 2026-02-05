@@ -170,7 +170,7 @@ export class RedisAdapter {
 
         if (!results) continue;
 
-        for (const [, messages] of results) {
+        for (const [, messages] of results as [string, [string, string[]][]][]) {
           for (const [messageId, fields] of messages) {
             // 解析消息
             const fieldMap: Record<string, string> = {};

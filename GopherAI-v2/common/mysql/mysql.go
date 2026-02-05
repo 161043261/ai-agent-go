@@ -15,12 +15,13 @@ import (
 var DB *gorm.DB
 
 func InitMysql() error {
-	host := config.GetConfig().MysqlHost
-	port := config.GetConfig().MysqlPort
-	dbname := config.GetConfig().MysqlDatabaseName
-	username := config.GetConfig().MysqlUser
-	password := config.GetConfig().MysqlPassword
-	charset := config.GetConfig().MysqlCharset
+	cfg := config.GetConfig().MysqlConfig
+	host := cfg.MysqlHost
+	port := cfg.MysqlPort
+	dbname := cfg.MysqlDatabaseName
+	username := cfg.MysqlUser
+	password := cfg.MysqlPassword
+	charset := cfg.MysqlCharset
 
 	//dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Local", username, password, host, port, dbname, charset)
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=true&loc=Local", username, password, host, port, dbname, charset)

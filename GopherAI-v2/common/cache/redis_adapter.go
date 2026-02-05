@@ -32,10 +32,10 @@ func GetRedisClient() *redisCli.Client {
 
 // initRedis 初始化 Redis 连接
 func initRedis() error {
-	conf := config.GetConfig()
-	host := conf.RedisConfig.RedisHost
-	port := conf.RedisConfig.RedisPort
-	password := conf.RedisConfig.RedisPassword
+	conf := config.GetConfig().RedisConfig
+	host := conf.RedisHost
+	port := conf.RedisPort
+	password := conf.RedisPassword
 	db := conf.RedisDb
 	addr := host + ":" + strconv.Itoa(port)
 

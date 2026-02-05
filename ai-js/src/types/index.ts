@@ -12,7 +12,6 @@ export enum StatusCode {
   ServerBusy = 4001,
   AIModelFail = 5003,
   FileUploadFail = 5004,
-  ImageRecognizeFail = 5005,
 }
 
 // 状态码消息映射
@@ -27,7 +26,6 @@ export const StatusMessage: Record<StatusCode, string> = {
   [StatusCode.ServerBusy]: '服务繁忙，请稍后重试',
   [StatusCode.AIModelFail]: '模型运行失败',
   [StatusCode.FileUploadFail]: '文件上传失败',
-  [StatusCode.ImageRecognizeFail]: '图像识别失败',
 };
 
 // 通用 API 响应结构
@@ -123,12 +121,6 @@ export interface FileUploadResponse {
   message: string;
 }
 
-// 图像识别
-export interface ImageRecognizeResponse {
-  label: string;
-  confidence?: number;
-}
-
 // 配置类型
 export interface AppConfig {
   server: {
@@ -163,18 +155,12 @@ export interface AppConfig {
     apiKey: string;
     baseUrl: string;
   };
-  image: {
-    enabled: boolean;
-    onnxRuntimeLib: string;
-    modelPath: string;
-    labelPath: string;
-  };
 }
 
 // Fastify 扩展
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: JwtPayload;
+    user: JwtPayload;
   }
 }
 

@@ -5,7 +5,6 @@ go 1.24.0
 toolchain go1.24.10
 
 require (
-	github.com/BurntSushi/toml v0.3.1
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/cloudwego/eino v0.5.14
 	github.com/cloudwego/eino-ext/components/embedding/ark v0.1.0
@@ -18,8 +17,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/mark3labs/mcp-go v0.43.2
 	github.com/redis/go-redis/v9 v9.16.0
-	github.com/yalue/onnxruntime_go v1.22.0
-	golang.org/x/image v0.33.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.1
 )

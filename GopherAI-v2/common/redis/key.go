@@ -6,11 +6,9 @@ import (
 )
 
 func GenerateIndexName(filename string) string {
-	indexName := fmt.Sprintf(config.DefaultRedisKeyConfig.IndexName, filename)
-	return indexName
+	return fmt.Sprintf(config.GetConfig().RedisConfig.IndexName, filename)
 }
 
 func GenerateIndexNamePrefix(filename string) string {
-	prefix := fmt.Sprintf(config.DefaultRedisKeyConfig.IndexNamePrefix, filename)
-	return prefix
+	return fmt.Sprintf(config.GetConfig().RedisConfig.IndexNamePrefix, filename)
 }

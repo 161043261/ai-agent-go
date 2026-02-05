@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import fastifyJwt from '@fastify/jwt';
 import { StatusCode, StatusMessage } from '../types/index.js';
 
 /**
@@ -8,13 +9,8 @@ export async function registerAuthPlugin(app: FastifyInstance): Promise<void> {
   // 注册 JWT 插件
   const config = (await import('../config/index.js')).getConfig();
   
-  await app.register(import('@fastify/jwt'), {
+  await app.register(fastifyJwt, {
     secret: config.jwt.secret,
-    sign: {
-      expiresIn: config.jwt.expiresIn,
-      issuer: config.jwt.issuer,
-      subject: config.jwt.subject,
-    },
   });
 
   // 添加认证装饰器

@@ -66,7 +66,7 @@ export async function sessionController(app: FastifyInstance): Promise<void> {
       return reply.send({
         status_code: StatusCode.Success,
         status_msg: StatusMessage[StatusCode.Success],
-        ...result.data,
+        ...(result.data as object),
       });
     }
   );
@@ -109,7 +109,7 @@ export async function sessionController(app: FastifyInstance): Promise<void> {
       return reply.send({
         status_code: StatusCode.Success,
         status_msg: StatusMessage[StatusCode.Success],
-        ...result.data,
+        ...(result.data as object),
       });
     }
   );
