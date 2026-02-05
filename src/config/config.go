@@ -29,7 +29,7 @@ type MysqlConfig struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Db       string `json:"db"`
-	Charset string `json:"charset"`
+	Charset  string `json:"charset"`
 }
 
 type JwtConfig struct {
@@ -46,7 +46,6 @@ type RagConfig struct {
 	BaseUrl        string `json:"base_url"`
 	Dimension      int    `json:"dimension"`
 }
-
 
 type Config struct {
 	RedisConfig `json:"redis"`
@@ -74,5 +73,5 @@ func init() {
 }
 
 func GetConfig() *Config {
-	return config;
+	return config
 }

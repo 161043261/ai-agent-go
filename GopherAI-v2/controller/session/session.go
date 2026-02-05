@@ -154,7 +154,6 @@ func ChatStreamSend(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 	c.Header("X-Accel-Buffering", "no") // 禁止代理缓存
 
-
 	code_ := session.ChatStreamSend(userName, req.SessionID, req.UserQuestion, req.ModelType, http.ResponseWriter(c.Writer))
 	if code_ != code.CodeSuccess {
 		c.SSEvent("error", gin.H{"message": "Failed to send message"})

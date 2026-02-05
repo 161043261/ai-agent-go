@@ -13,13 +13,13 @@ type MainConfig struct {
 }
 
 type RedisConfig struct {
-	RedisEnabled        bool   `json:"enabled"`         // 是否启用 Redis
-	RedisPort           int    `json:"port"`
-	RedisDb             int    `json:"db"`
-	RedisHost           string `json:"host"`
-	RedisPassword       string `json:"password"`
-	IndexName           string `json:"indexName"`       // Redis 索引名称模板
-	IndexNamePrefix     string `json:"indexNamePrefix"` // Redis 索引名称前缀模板
+	RedisEnabled    bool   `json:"enabled"` // 是否启用 Redis
+	RedisPort       int    `json:"port"`
+	RedisDb         int    `json:"db"`
+	RedisHost       string `json:"host"`
+	RedisPassword   string `json:"password"`
+	IndexName       string `json:"indexName"`       // Redis 索引名称模板
+	IndexNamePrefix string `json:"indexNamePrefix"` // Redis 索引名称前缀模板
 }
 
 type MysqlConfig struct {
