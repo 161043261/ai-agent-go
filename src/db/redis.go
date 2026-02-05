@@ -2,7 +2,6 @@ package db
 
 import (
 	"ai-agent-go/src/config"
-	"ai-agent-go/src/dao"
 	"ai-agent-go/src/model"
 	"context"
 	"encoding/json"
@@ -121,11 +120,10 @@ func processRedisMessage(ctx context.Context, messageId string, values map[strin
 		Username:  item.Username,
 		IsUser:    item.IsUser,
 	}
-	// Mysql
-	if _, err := dao.CreateMessage(newMessage); err != nil {
+	if err := Mysql.Create(newMessage).Error; err != nil {
 		return err
 	}
-	log.Printf("Processed message %s ok, sessionId=%s, username= %", item.SessionId, item.Username)
+	log.Printf("Processed message %s ok, sessionId=%s, username=%s", messageId, item.SessionId, item.Username)
 	return nil
 }
 

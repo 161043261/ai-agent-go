@@ -2,7 +2,6 @@ package db
 
 import (
 	"ai-agent-go/src/config"
-	"ai-agent-go/src/dao"
 	"ai-agent-go/src/model"
 	"context"
 	"encoding/json"
@@ -132,10 +131,10 @@ func processMessageDirect(data []byte) error {
 		Username:  item.Username,
 		IsUser:    item.IsUser,
 	}
-	if _, err := dao.CreateMessage(newMessage); err != nil {
+	if err := Mysql.Create(newMessage).Error; err != nil {
 		return err
 	}
-	log.Println("Message has been persisted, sessionId=%s, username=%s", item.SessionId, item.Username)
+	log.Printf("Message has been persisted, sessionId=%s, username=%s", item.SessionId, item.Username)
 	return nil
 }
 
