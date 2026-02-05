@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "@/services/api";
 import type { ApiResponse } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { UserPlus } from "lucide-react";
+import { SettingsBar } from "@/components/SettingsBar";
 
 export default function Register() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
@@ -32,13 +36,13 @@ export default function Register() {
 
   const sendCode = async () => {
     if (!form.email) {
-      toast.warning("请先输入邮箱");
+      toast.warning(t("auth.emailRequired"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) {
-      toast.error("请输入正确的邮箱格式");
+      toast.error(t("auth.emailInvalid"));
       return;
     }
 
@@ -49,7 +53,7 @@ export default function Register() {
       });
 
       if (response.data.status_code === 1000) {
-        toast.success("验证码发送成功");
+        toast.success(t("auth.captchaSent"));
         setCountdown(60);
         timerRef.current = setInterval(() => {
           setCountdown((prev) => {
@@ -64,11 +68,11 @@ export default function Register() {
           });
         }, 1000);
       } else {
-        toast.error(response.data.status_msg || "验证码发送失败");
+        toast.error(response.data.status_msg || t("auth.captchaFailed"));
       }
     } catch (error) {
       console.error("Send code error:", error);
-      toast.error("验证码发送失败，请重试");
+      toast.error(t("auth.captchaFailed"));
     } finally {
       setCodeLoading(false);
     }
@@ -77,22 +81,21 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) {
-      toast.error("请输入正确的邮箱格式");
+      toast.error(t("auth.emailInvalid"));
       return;
     }
     if (!form.captcha) {
-      toast.error("请输入验证码");
+      toast.error(t("auth.captchaRequired"));
       return;
     }
     if (!form.password || form.password.length < 6) {
-      toast.error("密码长度不能少于6位");
+      toast.error(t("auth.passwordRequired"));
       return;
     }
     if (form.password !== form.confirmPassword) {
-      toast.error("两次输入密码不一致");
+      toast.error(t("auth.passwordMismatch"));
       return;
     }
 
@@ -105,123 +108,140 @@ export default function Register() {
       });
 
       if (response.data.status_code === 1000) {
-        toast.success("注册成功，请登录");
+        toast.success(t("auth.registerSuccess"));
         navigate("/login");
       } else {
-        toast.error(response.data.status_msg || "注册失败");
+        toast.error(response.data.status_msg || t("auth.registerFailed"));
       }
     } catch (error) {
       console.error("Register error:", error);
-      toast.error("注册失败，请重试");
+      toast.error(t("auth.registerFailed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Settings Bar - Top Right */}
+      <div className="absolute top-4 right-4 z-10">
+        <SettingsBar />
       </div>
 
-      <Card className="w-[420px] bg-white/95 backdrop-blur-xl shadow-2xl border-0 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            注册
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">邮箱</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="请输入邮箱"
-                value={form.email}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, email: e.target.value }))
-                }
-                className="h-11 transition-all focus:scale-[1.02]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="captcha">验证码</Label>
-              <div className="flex gap-3">
-                <Input
-                  id="captcha"
-                  placeholder="请输入验证码"
-                  value={form.captcha}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, captcha: e.target.value }))
-                  }
-                  className="h-11 flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="h-11 px-4 whitespace-nowrap"
-                  onClick={sendCode}
-                  disabled={codeLoading || countdown > 0}
-                >
-                  {countdown > 0 ? `${countdown}s` : "发送验证码"}
-                </Button>
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="w-[420px] border border-border shadow-none rounded-lg bg-card">
+          <CardHeader className="text-center pb-2 pt-10">
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+                <UserPlus className="w-8 h-8 text-primary" />
               </div>
             </div>
+            <CardTitle className="text-2xl font-normal text-foreground">
+              {t("auth.register")}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t("auth.registerFor")}
+            </p>
+          </CardHeader>
+          <CardContent className="px-10 pb-10">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-muted-foreground text-xs font-medium">
+                  {t("auth.email")}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t("auth.emailRequired")}
+                  value={form.email}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  className="h-12 rounded-md border-input focus:border-primary focus:ring-primary bg-background"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="请输入密码"
-                value={form.password}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, password: e.target.value }))
-                }
-                className="h-11 transition-all focus:scale-[1.02]"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="captcha" className="text-muted-foreground text-xs font-medium">
+                  {t("auth.captcha")}
+                </Label>
+                <div className="flex gap-3">
+                  <Input
+                    id="captcha"
+                    placeholder={t("auth.captchaRequired")}
+                    value={form.captcha}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, captcha: e.target.value }))
+                    }
+                    className="h-12 flex-1 rounded-md border-input focus:border-primary focus:ring-primary bg-background"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 px-4 whitespace-nowrap border-input text-primary hover:bg-accent hover:text-primary"
+                    onClick={sendCode}
+                    disabled={codeLoading || countdown > 0}
+                  >
+                    {countdown > 0 ? `${countdown}s` : t("auth.sendCode")}
+                  </Button>
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">确认密码</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="请再次输入密码"
-                value={form.confirmPassword}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    confirmPassword: e.target.value,
-                  }))
-                }
-                className="h-11 transition-all focus:scale-[1.02]"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-muted-foreground text-xs font-medium">
+                  {t("auth.password")}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder={t("auth.passwordRequired")}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  className="h-12 rounded-md border-input focus:border-primary focus:ring-primary bg-background"
+                />
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11 text-base font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              disabled={loading}
-            >
-              {loading ? "注册中..." : "注册"}
-            </Button>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-muted-foreground text-xs font-medium">
+                  {t("auth.confirmPassword")}
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder={t("auth.passwordMismatch")}
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
+                  className="h-12 rounded-md border-input focus:border-primary focus:ring-primary bg-background"
+                />
+              </div>
 
-            <div className="text-center">
-              <Link
-                to="/login"
-                className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
-              >
-                已有账号？去登录
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="flex items-center justify-between pt-4">
+                <Link
+                  to="/login"
+                  className="text-sm text-primary hover:text-primary/80 font-medium"
+                >
+                  {t("auth.hasAccount")}
+                </Link>
+                <Button
+                  type="submit"
+                  className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md"
+                  disabled={loading}
+                >
+                  {loading ? t("auth.registering") : t("auth.register")}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useSetAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 import { setTokenAtom } from "@/stores/auth";
 import api from "@/services/api";
 import type { LoginResponse } from "@/types";
@@ -9,8 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { MessageSquare } from "lucide-react";
+import { SettingsBar } from "@/components/SettingsBar";
 
 export default function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setToken = useSetAtom(setTokenAtom);
   const [loading, setLoading] = useState(false);
@@ -23,11 +27,11 @@ export default function Login() {
     e.preventDefault();
 
     if (!form.username.trim()) {
-      toast.error("请输入用户名");
+      toast.error(t("auth.usernameRequired"));
       return;
     }
     if (!form.password || form.password.length < 6) {
-      toast.error("密码长度不能少于6位");
+      toast.error(t("auth.passwordRequired"));
       return;
     }
 
@@ -40,81 +44,94 @@ export default function Login() {
 
       if (response.data.status_code === 1000 && response.data.token) {
         setToken(response.data.token);
-        toast.success("登录成功");
+        toast.success(t("auth.loginSuccess"));
         navigate("/menu");
       } else {
-        toast.error(response.data.status_msg || "登录失败");
+        toast.error(response.data.status_msg || t("auth.loginFailed"));
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("登录失败，请重试");
+      toast.error(t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Settings Bar - Top Right */}
+      <div className="absolute top-4 right-4 z-10">
+        <SettingsBar />
       </div>
 
-      <Card className="w-[420px] bg-white/95 backdrop-blur-xl shadow-2xl border-0 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            登录
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="username">用户名</Label>
-              <Input
-                id="username"
-                placeholder="请输入用户名"
-                value={form.username}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, username: e.target.value }))
-                }
-                className="h-12 transition-all focus:scale-[1.02]"
-              />
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="w-[420px] border border-border shadow-none rounded-lg bg-card">
+          <CardHeader className="text-center pb-2 pt-10">
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center">
+                <MessageSquare className="w-8 h-8 text-primary" />
+              </div>
             </div>
+            <CardTitle className="text-2xl font-normal text-foreground">
+              {t("auth.login")}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t("auth.continueWith")}
+            </p>
+          </CardHeader>
+          <CardContent className="px-10 pb-10">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-muted-foreground text-xs font-medium">
+                  {t("auth.username")}
+                </Label>
+                <Input
+                  id="username"
+                  placeholder={t("auth.usernameRequired")}
+                  value={form.username}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, username: e.target.value }))
+                  }
+                  className="h-12 rounded-md border-input focus:border-primary focus:ring-primary transition-colors bg-background"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="请输入密码"
-                value={form.password}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, password: e.target.value }))
-                }
-                className="h-12 transition-all focus:scale-[1.02]"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-muted-foreground text-xs font-medium">
+                  {t("auth.password")}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder={t("auth.passwordRequired")}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  className="h-12 rounded-md border-input focus:border-primary focus:ring-primary transition-colors bg-background"
+                />
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              disabled={loading}
-            >
-              {loading ? "登录中..." : "登录"}
-            </Button>
-
-            <div className="text-center">
-              <Link
-                to="/register"
-                className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
-              >
-                还没有账号？去注册
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="flex items-center justify-between pt-4">
+                <Link
+                  to="/register"
+                  className="text-sm text-primary hover:text-primary/80 font-medium"
+                >
+                  {t("auth.noAccount")}
+                </Link>
+                <Button
+                  type="submit"
+                  className="h-10 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md transition-colors"
+                  disabled={loading}
+                >
+                  {loading ? t("auth.signingIn") : t("common.next")}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

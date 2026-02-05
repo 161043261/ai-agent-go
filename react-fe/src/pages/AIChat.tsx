@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "@/services/api";
 import type {
   SessionsResponse,
@@ -24,8 +25,11 @@ import {
   Paperclip,
   Volume2,
   Send,
+  Sparkles,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
+import { SettingsBar } from "@/components/SettingsBar";
 
 interface Message {
   role: "user" | "assistant";
@@ -42,6 +46,7 @@ interface Session {
 }
 
 export default function AIChat() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Record<string, Session>>({});
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -65,7 +70,6 @@ export default function AIChat() {
     scrollToBottom();
   }, [currentMessages, scrollToBottom]);
 
-  // Load sessions on mount
   useEffect(() => {
     loadSessions();
   }, []);
@@ -83,7 +87,7 @@ export default function AIChat() {
           const sid = String(s.sessionId);
           sessionMap[sid] = {
             id: sid,
-            name: s.name || `会话 ${sid}`,
+            name: s.name || `${t("chat.session")} ${sid}`,
             messages: [],
           };
         });
@@ -106,7 +110,6 @@ export default function AIChat() {
     setCurrentSessionId(sessionId);
     setTempSession(false);
 
-    // Lazy load history if not present
     if (
       !sessions[sessionId]?.messages ||
       sessions[sessionId].messages.length === 0
@@ -141,7 +144,7 @@ export default function AIChat() {
 
   const syncHistory = async () => {
     if (!currentSessionId || tempSession) {
-      toast.warning("请选择已有会话进行同步");
+      toast.warning(t("chat.selectSession"));
       return;
     }
     try {
@@ -163,17 +166,17 @@ export default function AIChat() {
         }));
         setCurrentMessages(messages);
       } else {
-        toast.error("无法获取历史数据");
+        toast.error(t("chat.noHistory"));
       }
     } catch (err) {
       console.error("Sync history error:", err);
-      toast.error("请求历史数据失败");
+      toast.error(t("chat.historyFailed"));
     }
   };
 
   const sendMessage = async () => {
     if (!inputMessage.trim()) {
-      toast.warning("请输入消息内容");
+      toast.warning(t("chat.messageRequired"));
       return;
     }
 
@@ -195,7 +198,7 @@ export default function AIChat() {
       }
     } catch (err) {
       console.error("Send message error:", err);
-      toast.error("发送失败，请重试");
+      toast.error(t("chat.sendFailed"));
       setCurrentMessages((prev) => prev.slice(0, -1));
     } finally {
       if (!isStreaming) {
@@ -285,7 +288,7 @@ export default function AIChat() {
                       ...prev,
                       [newSid]: {
                         id: newSid,
-                        name: "新会话",
+                        name: t("chat.newSession"),
                         messages: [],
                       },
                     }));
@@ -331,7 +334,7 @@ export default function AIChat() {
         }
         return newMessages;
       });
-      toast.error("流式传输出错");
+      toast.error(t("chat.streamError"));
     }
   };
 
@@ -370,7 +373,7 @@ export default function AIChat() {
           ...prev,
           [sessionId]: {
             id: sessionId,
-            name: "新会话",
+            name: t("chat.newSession"),
             messages: [{ role: "user", content: question }, aiMessage],
           },
         }));
@@ -378,7 +381,7 @@ export default function AIChat() {
         setTempSession(false);
         setCurrentMessages([{ role: "user", content: question }, aiMessage]);
       } else {
-        toast.error(response.data?.status_msg || "发送失败");
+        toast.error(response.data?.status_msg || t("chat.sendFailed"));
         setCurrentMessages((prev) => prev.slice(0, -1));
       }
     } else {
@@ -409,7 +412,7 @@ export default function AIChat() {
           }));
         }
       } else {
-        toast.error(response.data?.status_msg || "发送失败");
+        toast.error(response.data?.status_msg || t("chat.sendFailed"));
         setCurrentMessages((prev) => prev.slice(0, -1));
       }
     }
@@ -426,9 +429,8 @@ export default function AIChat() {
         createResponse.data.task_id
       ) {
         const taskId = createResponse.data.task_id;
-        toast.info("正在生成语音...");
+        toast.info(t("chat.ttsGenerating"));
 
-        // Wait 5 seconds before polling
         await new Promise((resolve) => setTimeout(resolve, 5000));
 
         const maxAttempts = 30;
@@ -443,16 +445,10 @@ export default function AIChat() {
             }
           );
 
-          if (
-            queryResponse.data &&
-            queryResponse.data.status_code === 1000
-          ) {
+          if (queryResponse.data && queryResponse.data.status_code === 1000) {
             const taskStatus = queryResponse.data.task_status;
 
-            if (
-              taskStatus === "Success" &&
-              queryResponse.data.task_result
-            ) {
+            if (taskStatus === "Success" && queryResponse.data.task_result) {
               const audio = new Audio(queryResponse.data.task_result);
               audio.play();
               return true;
@@ -464,11 +460,11 @@ export default function AIChat() {
                 );
                 return await pollResult();
               } else {
-                toast.error("语音合成超时");
+                toast.error(t("chat.ttsTimeout"));
                 return true;
               }
             } else {
-              toast.error("语音合成失败");
+              toast.error(t("chat.ttsFailed"));
               return true;
             }
           }
@@ -478,18 +474,18 @@ export default function AIChat() {
             await new Promise((resolve) => setTimeout(resolve, pollInterval));
             return await pollResult();
           } else {
-            toast.error("语音合成超时");
+            toast.error(t("chat.ttsTimeout"));
             return true;
           }
         };
 
         await pollResult();
       } else {
-        toast.error("无法创建语音合成任务");
+        toast.error(t("chat.ttsFailed"));
       }
     } catch (error) {
       console.error("TTS error:", error);
-      toast.error("请求语音接口失败");
+      toast.error(t("chat.ttsRequestFailed"));
     }
   };
 
@@ -503,7 +499,7 @@ export default function AIChat() {
 
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith(".md") && !fileName.endsWith(".txt")) {
-      toast.error("只允许上传 .md 或 .txt 文件");
+      toast.error(t("chat.fileTypeError"));
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -515,24 +511,23 @@ export default function AIChat() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await api.post<{ status_code: number; status_msg?: string }>(
-        "/file/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await api.post<{
+        status_code: number;
+        status_msg?: string;
+      }>("/file/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data && response.data.status_code === 1000) {
-        toast.success("文件上传成功");
+        toast.success(t("chat.uploadSuccess"));
       } else {
-        toast.error(response.data?.status_msg || "上传失败");
+        toast.error(response.data?.status_msg || t("chat.uploadFailed"));
       }
     } catch (error) {
       console.error("File upload error:", error);
-      toast.error("文件上传失败");
+      toast.error(t("chat.uploadFailed"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -546,7 +541,10 @@ export default function AIChat() {
     return text
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/`(.*?)`/g, "<code class='bg-gray-100 px-1 rounded'>$1</code>")
+      .replace(
+        /`(.*?)`/g,
+        "<code class='bg-muted px-1.5 py-0.5 rounded text-sm'>$1</code>"
+      )
       .replace(/\n/g, "<br>");
   };
 
@@ -558,23 +556,16 @@ export default function AIChat() {
   };
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
-      </div>
-
-      {/* Session List */}
-      <aside className="w-72 bg-white/95 backdrop-blur-xl border-r border-gray-100 flex flex-col relative z-10">
-        <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-          <span className="font-semibold text-gray-700">会话列表</span>
+    <div className="h-screen flex bg-background">
+      {/* Session Sidebar */}
+      <aside className="w-72 bg-card border-r border-border flex flex-col">
+        <div className="p-4 border-b border-border">
           <Button
             onClick={createNewSession}
-            className="w-full mt-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+            className="w-full h-10 bg-card hover:bg-muted text-foreground border border-border rounded-full shadow-sm gap-2"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            新聊天
+            <Plus className="w-5 h-5 text-primary" />
+            {t("chat.newChat")}
           </Button>
         </div>
 
@@ -584,10 +575,10 @@ export default function AIChat() {
               <button
                 key={session.id}
                 onClick={() => switchSession(session.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg mb-1 transition-all ${
+                className={`w-full text-left px-4 py-3 rounded-full mb-1 text-sm transition-colors ${
                   currentSessionId === session.id
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
-                    : "hover:bg-gray-100 text-gray-700"
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "hover:bg-muted text-foreground"
                 }`}
               >
                 {session.name}
@@ -597,65 +588,71 @@ export default function AIChat() {
         </ScrollArea>
       </aside>
 
-      {/* Chat Section */}
-      <main className="flex-1 flex flex-col relative z-10">
-        {/* Top Bar */}
-        <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 px-6 py-3 flex items-center gap-4">
+      {/* Main Chat Area */}
+      <main className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-card border-b border-border px-6 py-3 flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/menu")}
-            className="gap-2"
+            className="gap-2 text-muted-foreground hover:bg-muted rounded-full"
           >
             <ArrowLeft className="w-4 h-4" />
-            返回
+            {t("common.back")}
           </Button>
 
+          <div className="h-6 w-px bg-border" />
+
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={syncHistory}
             disabled={!currentSessionId || tempSession}
-            className="gap-2"
+            className="gap-2 text-muted-foreground hover:bg-muted rounded-full"
           >
             <RefreshCw className="w-4 h-4" />
-            同步历史
+            {t("chat.syncHistory")}
           </Button>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">选择模型：</span>
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-sm text-muted-foreground">{t("chat.model")}:</span>
             <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-36 h-9 rounded-md border-input text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">阿里百炼</SelectItem>
-                <SelectItem value="2">阿里百炼 RAG</SelectItem>
-                <SelectItem value="3">阿里百炼 MCP</SelectItem>
+                <SelectItem value="1">{t("chat.alibailian")}</SelectItem>
+                <SelectItem value="2">{t("chat.alibailianRAG")}</SelectItem>
+                <SelectItem value="3">{t("chat.alibailianMCP")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-4">
             <Checkbox
               id="streaming"
               checked={isStreaming}
               onCheckedChange={(checked) => setIsStreaming(!!checked)}
+              className="border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            <label htmlFor="streaming" className="text-sm text-gray-600 cursor-pointer">
-              流式响应
+            <label
+              htmlFor="streaming"
+              className="text-sm text-muted-foreground cursor-pointer"
+            >
+              {t("chat.streaming")}
             </label>
           </div>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={triggerFileUpload}
             disabled={uploading}
-            className="gap-2 ml-auto"
+            className="gap-2 text-muted-foreground hover:bg-muted rounded-full ml-auto"
           >
             <Paperclip className="w-4 h-4" />
-            上传文档
+            {t("chat.uploadDoc")}
           </Button>
           <input
             ref={fileInputRef}
@@ -664,83 +661,132 @@ export default function AIChat() {
             className="hidden"
             onChange={handleFileUpload}
           />
+
+          <div className="h-6 w-px bg-border" />
+          <SettingsBar />
         </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-4">
-            {currentMessages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                } animate-in fade-in slide-in-from-bottom-2 duration-300`}
-              >
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto">
+          {currentMessages.length === 0 ? (
+            /* Empty State */
+            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+              <div className="w-20 h-20 rounded-full bg-accent flex items-center justify-center mb-6">
+                <Sparkles className="w-10 h-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-normal text-foreground mb-3">
+                {t("chat.emptyTitle")}
+              </h2>
+              <p className="text-muted-foreground max-w-md">
+                {t("chat.emptyDesc")}
+              </p>
+            </div>
+          ) : (
+            /* Messages List */
+            <div className="max-w-3xl mx-auto py-6 px-4">
+              {currentMessages.map((message, index) => (
                 <div
-                  className={`max-w-[70%] rounded-2xl px-5 py-3 ${
-                    message.role === "user"
-                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                      : "bg-white/95 backdrop-blur text-gray-800 shadow-md border border-gray-100"
+                  key={index}
+                  className={`flex gap-4 mb-6 ${
+                    message.role === "user" ? "flex-row-reverse" : ""
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-sm">
-                      {message.role === "user" ? "你" : "AI"}
-                    </span>
-                    {message.role === "assistant" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={() => playTTS(message.content)}
-                      >
-                        <Volume2 className="w-3 h-3" />
-                      </Button>
-                    )}
-                    {message.meta?.status === "streaming" && (
-                      <span className="text-xs opacity-60">输入中...</span>
+                  {/* Avatar */}
+                  <div
+                    className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center ${
+                      message.role === "user"
+                        ? "bg-primary"
+                        : "bg-accent"
+                    }`}
+                  >
+                    {message.role === "user" ? (
+                      <User className="w-5 h-5 text-primary-foreground" />
+                    ) : (
+                      <Sparkles className="w-5 h-5 text-primary" />
                     )}
                   </div>
+
+                  {/* Message Content */}
                   <div
-                    className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-                    dangerouslySetInnerHTML={{
-                      __html: renderMarkdown(message.content),
-                    }}
-                  />
+                    className={`flex-1 ${
+                      message.role === "user" ? "text-right" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={`text-sm font-medium ${
+                          message.role === "user"
+                            ? "text-primary ml-auto"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {message.role === "user" ? t("chat.you") : t("chat.ai")}
+                      </span>
+                      {message.role === "assistant" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 hover:bg-muted rounded-full"
+                          onClick={() => playTTS(message.content)}
+                        >
+                          <Volume2 className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                      )}
+                      {message.meta?.status === "streaming" && (
+                        <span className="text-xs text-primary">
+                          {t("chat.typing")}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className={`inline-block rounded-2xl px-4 py-3 max-w-full ${
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground text-left"
+                          : "bg-muted text-foreground"
+                      }`}
+                    >
+                      <div
+                        className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                        dangerouslySetInnerHTML={{
+                          __html: renderMarkdown(message.content),
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
 
         {/* Input Area */}
-        <div className="bg-white/95 backdrop-blur-xl border-t border-gray-100 p-6">
-          <div className="max-w-4xl mx-auto relative">
-            <textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="请输入你的问题..."
-              disabled={loading}
-              rows={1}
-              className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 pr-24 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!inputMessage.trim() || loading}
-              className="absolute right-2 bottom-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-            >
-              {loading ? (
-                "发送中..."
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-1" />
-                  发送
-                </>
-              )}
-            </Button>
+        <div className="bg-card border-t border-border p-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="relative flex items-center bg-muted rounded-full border border-transparent focus-within:border-primary focus-within:bg-background transition-all">
+              <textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t("chat.inputPlaceholder")}
+                disabled={loading}
+                rows={1}
+                className="flex-1 bg-transparent px-6 py-3 resize-none focus:outline-none text-foreground placeholder-muted-foreground disabled:opacity-50"
+                style={{ maxHeight: "120px" }}
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={!inputMessage.trim() || loading}
+                size="sm"
+                className="mr-2 w-10 h-10 p-0 rounded-full bg-primary hover:bg-primary/90 disabled:bg-muted disabled:opacity-100"
+              >
+                <Send className="w-5 h-5 text-primary-foreground" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              {t("chat.sendHint")}
+            </p>
           </div>
         </div>
       </main>
