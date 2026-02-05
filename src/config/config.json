@@ -1,0 +1,35 @@
+{
+  "app": {
+    "name": "ai-agent-go",
+    "host": "0.0.0.0",
+    "port": 9090
+  },
+  "redis": {
+    "enabled": false,
+    "host": "127.0.0.1",
+    "port": 6379,
+    "password": "",
+    "db": 0
+  },
+  "mysql": {
+    "port": 3306,
+    "host": "localhost",
+    "user": "root",
+    "password": "0406",
+    "db": "ai_agent_go",
+    "charset": "utf8mb4"
+  },
+  "jwt": {
+    "expire_duration": 8760,
+    "issuer": "https://github.com/161043261/ai-agent-go",
+    "subject": "ai-agent-go",
+    "key": "ai-agent-go"
+  },
+  "rag": {
+    "embedding_model": "text-embedding-v4",
+    "chat_model": "qwen-turbo",
+    "docs_dir": "./docs",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "dimension": 1024
+  }
+}
