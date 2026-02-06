@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"ai-agent-go/src/config"
+	"fmt"
 )
 
 func GetIndexName(name string) string {

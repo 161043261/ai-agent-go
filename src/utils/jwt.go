@@ -14,19 +14,19 @@ type Claims struct {
 }
 
 func JwtToken(id int64, username string) (string, error) {
-	cfg := config.Get().JwtConfig
+	jwtConfig := config.Get().JwtConfig
 	claims := Claims{
 		Id:       id,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.ExpireDuration) * time.Hour)),
-			Issuer:    cfg.Issuer,
-			Subject:   cfg.Subject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(jwtConfig.ExpireDuration) * time.Hour)),
+			Issuer:    jwtConfig.Issuer,
+			Subject:   jwtConfig.Subject,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	return token.SignedString([]byte(cfg.Key))
+	return token.SignedString([]byte(jwtConfig.Key))
 }
 
 func ParseToken(token string) (string, bool) {

@@ -2,14 +2,16 @@
   "app": {
     "name": "ai-agent-go",
     "host": "0.0.0.0",
-    "port": 9090
+    "port": 8080
   },
   "redis": {
     "enabled": false,
     "host": "127.0.0.1",
     "port": 6379,
     "password": "",
-    "db": 0
+    "db": 0,
+    "index": "rag_docs:%s:index",
+    "index_prefix": "rag_docs:%s:"
   },
   "mysql": {
     "port": 3306,
@@ -21,19 +23,22 @@
   },
   "jwt": {
     "expire_duration": 8760,
-    "issuer": "https://github.com/161043261/ai-agent-go",
+    "issuer": "ai-agent-go",
     "subject": "ai-agent-go",
     "key": "ai-agent-go"
   },
   "rag": {
-    "embedding_model": "text-embedding-v4",
+    "embedding_model": "nomic-embed-text",
     "docs_dir": "./docs",
     "dimension": 1024
+  },
+  "mcp": {
+    "base_url": "http://localhost:8081/mcp"
   },
   "ai": {
     "provider": "ollama",
     "api_key": "",
-    "mode_name": "",
-    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    "mode_name": "qwen2.5:7b",
+    "base_url": "http://localhost:11434"
   }
 }

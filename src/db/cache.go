@@ -57,13 +57,13 @@ func IsRedisEnabled() bool {
 
 func Init() error {
 	mgr := GetCacheManager()
-	cfg := config.Get().RedisConfig
+	redisConfig := config.Get().RedisConfig
 
-	if cfg.Enabled {
+	if redisConfig.Enabled {
 		initRedis()
 
 		if err := testRedisConnection(); err != nil {
-			log.Printf("Connect to redis error: %v, fallback to bigcache", err)
+			log.Printf("Connect to redis error: %v, fallback to bigcache\n", err)
 			mgr.provider = PROVIDER_BIGCACHE
 			return mgr.initBigcache()
 		}
@@ -134,7 +134,7 @@ func processMessageDirect(data []byte) error {
 	if err := Mysql.Create(newMessage).Error; err != nil {
 		return err
 	}
-	log.Printf("Message has been persisted, sessionId=%s, username=%s", item.SessionId, item.Username)
+	log.Printf("Message has been persisted, sessionId=%s, username=%s\n", item.SessionId, item.Username)
 	return nil
 }
 

@@ -25,12 +25,12 @@ var (
 )
 
 func initRedis() {
-	cfg := config.Get().RedisConfig
-	addr := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
+	redisConfig := config.Get().RedisConfig
+	addr := fmt.Sprintf("%v:%v", redisConfig.Host, redisConfig.Port)
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: cfg.Password,
-		DB:       cfg.Db,
+		Password: redisConfig.Password,
+		DB:       redisConfig.Db,
 		Protocol: 2,
 	})
 }
@@ -80,7 +80,7 @@ func consumeMessagesFromRedis() {
 			if err != redis.Nil {
 				continue
 			}
-			log.Printf("Read redis message queue error: %v", err)
+			log.Printf("Read redis message queue error: %v\n", err)
 			time.Sleep(time.Second)
 			continue
 		}
@@ -88,7 +88,7 @@ func consumeMessagesFromRedis() {
 		for _, chunk := range chunks {
 			for _, message := range chunk.Messages {
 				if err := processRedisMessage(ctx, message.ID, message.Values); err != nil {
-					log.Printf("Process message %s error: %v", message.ID, err)
+					log.Printf("Process message %s error: %v\n", message.ID, err)
 					continue
 				}
 				rdb.XAck(ctx, MessageStreamKey, MessageGroupName, message.ID)
@@ -100,12 +100,12 @@ func consumeMessagesFromRedis() {
 func processRedisMessage(ctx context.Context, messageId string, values map[string]any) error {
 	data, ok := values["data"].(string)
 	if !ok {
-		log.Printf("Message %s type error", messageId)
+		log.Printf("Message %s type error\n", messageId)
 		return nil
 	}
 	var item MessageQueueItem
 	if err := json.Unmarshal([]byte(data), &item); err != nil {
-		log.Printf("Message %s json unmarshal error:", err)
+		log.Printf("Message %s json unmarshal error: %s\n", data, err)
 	}
 	newMessage := &model.Message{
 		SessionId: item.SessionId,
@@ -116,7 +116,7 @@ func processRedisMessage(ctx context.Context, messageId string, values map[strin
 	if err := Mysql.Create(newMessage).Error; err != nil {
 		return err
 	}
-	log.Printf("Processed message %s ok, sessionId=%s, username=%s", messageId, item.SessionId, item.Username)
+	log.Printf("Processed message %s ok, sessionId=%s, username=%s\n", messageId, item.SessionId, item.Username)
 	return nil
 }
 
@@ -142,9 +142,9 @@ func ClearRedisCache(maxLen int64) error {
 
 func InitRedisIndex(ctx context.Context, filename string) error {
 	if !IsRedisEnabled() {
-		return fmt.Errorf("redis disabled, cannot initialize redis index")
+		return fmt.Errorf("redis disabled, cannot initialize redis index\n")
 	}
-	cfg := config.Get().RagConfig
+	ragConfig := config.Get().RagConfig
 	indexName := utils.GetIndexName(filename)
 	_, err := rdb.Do(ctx, "FT.INFO", indexName).Result()
 	if err == nil {
@@ -161,11 +161,11 @@ func InitRedisIndex(ctx context.Context, filename string) error {
 		"vector", "VECTOR", "FLAT",
 		"6",
 		"TYPE", "FLOAT32",
-		"DIM", cfg.Dimension,
+		"DIM", ragConfig.Dimension,
 		"DISTANCE_METRIC", "COSINE",
 	}
 	if err := rdb.Do(ctx, args...); err != nil {
-		return fmt.Errorf("create redis index error: %v", err)
+		return fmt.Errorf("create redis index error: %v\n", err)
 	}
 	log.Println("Redis index created")
 	return nil
@@ -173,11 +173,11 @@ func InitRedisIndex(ctx context.Context, filename string) error {
 
 func DeleteRedisIndex(ctx context.Context, filename string) error {
 	if !IsRedisEnabled() {
-		return fmt.Errorf("redis disabled, cannot initialize redis index")
+		return fmt.Errorf("redis disabled, cannot initialize redis index\n")
 	}
 	indexName := utils.GetIndexName(filename)
 	if err := rdb.Do(ctx, "FT.DROPINDEX", indexName).Err(); err != nil {
-		return fmt.Errorf("delete redis index error: %v", err)
+		return fmt.Errorf("delete redis index error: %v\n", err)
 	}
 	log.Println("Redis index deleted")
 	return nil

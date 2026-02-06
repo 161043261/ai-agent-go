@@ -35,7 +35,7 @@ func rmShallow(dir string) error {
 func ValidateFile(file *multipart.FileHeader) error {
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if ext != ".md" && ext != ".txt" {
-		return fmt.Errorf("file type %s not supported, only .md or .txt files are supported", ext)
+		return fmt.Errorf("file type %s not supported, only .md or .txt files are supported\n", ext)
 	}
 	return nil
 }
