@@ -1,6 +1,5 @@
 package src
 
-
 // get-weather
 import (
 	"context"

@@ -3,6 +3,7 @@ package ai
 import (
 	"ai-agent-go/src/config"
 	"ai-agent-go/src/rag"
+	"ai-agent-go/src/utils"
 	"context"
 	"fmt"
 	"io"
@@ -127,7 +128,7 @@ func (this *OllamaModel) ResponseStream(ctx context.Context, messages []*schema.
 
 var _ AiModel = (*OpenaiModel)(nil)
 
-func NewOpenAiModel(ctx context.Context) (*OpenaiModel, error) {
+func NewOpenaiModel(ctx context.Context) (*OpenaiModel, error) {
 	aiConfig := config.Get().AiConfig
 	llm, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
 		BaseURL: aiConfig.BaseUrl,
@@ -421,20 +422,133 @@ type OpenaiMcpModel struct {
 
 // GetModelType implements [AiModel].
 func (this *OpenaiMcpModel) GetModelType() string {
-	return OLLAMA_MCP_MODEL
+	return OPENAI_MCP_MODEL
 }
 
 // Response implements [AiModel].
 func (this *OpenaiMcpModel) Response(ctx context.Context, messages []*schema.Message) (*schema.Message, error) {
-	panic("unimplemented")
+	if len(messages) == 0 {
+		return nil, fmt.Errorf("messages is empty\n")
+	}
+	latestContent := messages[len(messages)-1].Content
+	firstPrompt := utils.BuildFirstMcpPrompt(latestContent)
+	firstMessages := make([]*schema.Message, len(messages))
+	copy(firstMessages, messages)
+	firstMessages[len(firstMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: firstPrompt,
+	}
+	firstResp, err := this.llm.Generate(ctx, firstMessages)
+	if err != nil {
+		return nil, fmt.Errorf("openai mcp model response error: %v\n", err)
+	}
+	log.Printf("Openai mcp model first response: %v\n", firstResp.Content)
+	toolCall, err := utils.ParseMcpResponse(firstResp.Content)
+	if err != nil {
+		return firstResp, nil
+	}
+	if !toolCall.IsToolCall {
+		log.Println("No need to call a tool")
+		return firstResp, nil
+	}
+	mcpClient, err := this.getMcpClient(ctx)
+	if err != nil {
+		log.Printf("Get mcp client error: %v\n", err)
+		return firstResp, nil
+	}
+	toolResult, err := utils.CallMcpTool(ctx, mcpClient, toolCall)
+	if err != nil {
+		log.Printf("Mcp tool call error: %v\n", err)
+		return firstResp, nil
+	}
+	secondPrompt := utils.BuildSecondMcpPrompt(latestContent, toolCall, toolResult)
+	secondMessages := make([]*schema.Message, len(messages))
+	copy(secondMessages, messages)
+	secondMessages[len(secondMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: secondPrompt,
+	}
+	finalResp, err := this.llm.Generate(ctx, secondMessages)
+	if err != nil {
+		return nil, fmt.Errorf("openai mcp model response error: %v\n", err)
+	}
+	return finalResp, nil
 }
 
 // ResponseStream implements [AiModel].
 func (this *OpenaiMcpModel) ResponseStream(ctx context.Context, messages []*schema.Message, cb StreamCallback) (string, error) {
-	panic("unimplemented")
+	if len(messages) == 0 {
+		return "", fmt.Errorf("messages is empty\n")
+	}
+	latestContent := messages[len(messages)-1].Content
+	firstPrompt := utils.BuildFirstMcpPrompt(latestContent)
+	firstMessages := make([]*schema.Message, len(messages))
+	copy(firstMessages, messages)
+	firstMessages[len(firstMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: firstPrompt,
+	}
+	firstResp, err := this.llm.Generate(ctx, firstMessages)
+	firstContent := firstResp.Content
+	if err != nil {
+		return "", fmt.Errorf("openai mcp model response error: %v\n", err)
+	}
+	log.Printf("Openai mcp model first response: %v\n", firstContent)
+	toolCall, err := utils.ParseMcpResponse(firstContent)
+	if err != nil {
+		return firstContent, nil
+	}
+	if !toolCall.IsToolCall {
+		log.Println("No need to call a tool")
+		return firstContent, nil
+	}
+	mcpClient, err := this.getMcpClient(ctx)
+	if err != nil {
+		log.Printf("Get mcp client error: %v\n", err)
+		return firstContent, nil
+	}
+	toolResult, err := utils.CallMcpTool(ctx, mcpClient, toolCall)
+	if err != nil {
+		log.Printf("Mcp tool call error: %v\n", err)
+		return firstContent, nil
+	}
+	secondPrompt := utils.BuildSecondMcpPrompt(latestContent, toolCall, toolResult)
+	secondMessages := make([]*schema.Message, len(messages))
+	copy(secondMessages, messages)
+	secondMessages[len(secondMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: secondPrompt,
+	}
+	return this.doResponseStream(ctx, secondMessages, cb)
 }
 
-func (this *OpenaiMcpModel) GetMcpClient(ctx context.Context) (*client.Client, error) {
+func (this *OpenaiMcpModel) doResponseStream(ctx context.Context, messages []*schema.Message, cb StreamCallback) (string, error) {
+	if len(messages) == 0 {
+		return "", fmt.Errorf("messages is empty\n")
+	}
+	stream, err := this.llm.Stream(ctx, messages)
+	if err != nil {
+		return "", fmt.Errorf("openai mcp model response stream error: %v\n", err)
+	}
+	defer stream.Close()
+	var fullContent strings.Builder
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fullContent.String(), fmt.Errorf("openai mcp model response stream receive error: %v\n", err)
+		}
+		if len(msg.Content) > 0 {
+			fullContent.WriteString(msg.Content)
+			cb(msg.Content)
+		}
+	}
+	return fullContent.String(), nil
+}
+
+func (this *OpenaiMcpModel) getMcpClient(ctx context.Context) (*client.Client, error) {
 	mcpConfig := config.Get().McpConfig
 	httpTrans, err := transport.NewStreamableHTTP(mcpConfig.BaseUrl)
 	if err != nil {
@@ -481,17 +595,130 @@ type OllamaMcpModel struct {
 
 // GetModelType implements [AiModel].
 func (this *OllamaMcpModel) GetModelType() string {
-	panic("unimplemented")
+	return OLLAMA_MCP_MODEL
 }
 
 // Response implements [AiModel].
 func (this *OllamaMcpModel) Response(ctx context.Context, messages []*schema.Message) (*schema.Message, error) {
-	panic("unimplemented")
+	if len(messages) == 0 {
+		return nil, fmt.Errorf("messages is empty\n")
+	}
+	latestContent := messages[len(messages)-1].Content
+	firstPrompt := utils.BuildFirstMcpPrompt(latestContent)
+	firstMessages := make([]*schema.Message, len(messages))
+	copy(firstMessages, messages)
+	firstMessages[len(firstMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: firstPrompt,
+	}
+	firstResp, err := this.llm.Generate(ctx, firstMessages)
+	if err != nil {
+		return nil, fmt.Errorf("ollama mcp model response error: %v\n", err)
+	}
+	log.Printf("Ollama mcp model first response: %v\n", firstResp.Content)
+	toolCall, err := utils.ParseMcpResponse(firstResp.Content)
+	if err != nil {
+		return firstResp, nil
+	}
+	if !toolCall.IsToolCall {
+		log.Println("No need to call a tool")
+		return firstResp, nil
+	}
+	mcpClient, err := this.getMcpClient(ctx)
+	if err != nil {
+		log.Printf("Get mcp client error: %v\n", err)
+		return firstResp, nil
+	}
+	toolResult, err := utils.CallMcpTool(ctx, mcpClient, toolCall)
+	if err != nil {
+		log.Printf("Mcp tool call error: %v\n", err)
+		return firstResp, nil
+	}
+	secondPrompt := utils.BuildSecondMcpPrompt(latestContent, toolCall, toolResult)
+	secondMessages := make([]*schema.Message, len(messages))
+	copy(secondMessages, messages)
+	secondMessages[len(secondMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: secondPrompt,
+	}
+	finalResp, err := this.llm.Generate(ctx, secondMessages)
+	if err != nil {
+		return nil, fmt.Errorf("ollama mcp model response error: %v\n", err)
+	}
+	return finalResp, nil
 }
 
 // ResponseStream implements [AiModel].
 func (this *OllamaMcpModel) ResponseStream(ctx context.Context, messages []*schema.Message, cb StreamCallback) (string, error) {
-	panic("unimplemented")
+	if len(messages) == 0 {
+		return "", fmt.Errorf("messages is empty\n")
+	}
+	latestContent := messages[len(messages)-1].Content
+	firstPrompt := utils.BuildFirstMcpPrompt(latestContent)
+	firstMessages := make([]*schema.Message, len(messages))
+	copy(firstMessages, messages)
+	firstMessages[len(firstMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: firstPrompt,
+	}
+	firstResp, err := this.llm.Generate(ctx, firstMessages)
+	firstContent := firstResp.Content
+	if err != nil {
+		return "", fmt.Errorf("ollama mcp model response error: %v\n", err)
+	}
+	log.Printf("Ollama mcp model first response: %v\n", firstContent)
+	toolCall, err := utils.ParseMcpResponse(firstContent)
+	if err != nil {
+		return firstContent, nil
+	}
+	if !toolCall.IsToolCall {
+		log.Println("No need to call a tool")
+		return firstContent, nil
+	}
+	mcpClient, err := this.getMcpClient(ctx)
+	if err != nil {
+		log.Printf("Get mcp client error: %v\n", err)
+		return firstContent, nil
+	}
+	toolResult, err := utils.CallMcpTool(ctx, mcpClient, toolCall)
+	if err != nil {
+		log.Printf("Mcp tool call error: %v\n", err)
+		return firstContent, nil
+	}
+	secondPrompt := utils.BuildSecondMcpPrompt(latestContent, toolCall, toolResult)
+	secondMessages := make([]*schema.Message, len(messages))
+	copy(secondMessages, messages)
+	secondMessages[len(secondMessages)-1] = &schema.Message{
+		Role:    schema.User,
+		Content: secondPrompt,
+	}
+	return this.doResponseStream(ctx, secondMessages, cb)
+}
+
+func (this *OllamaMcpModel) doResponseStream(ctx context.Context, messages []*schema.Message, cb StreamCallback) (string, error) {
+	if len(messages) == 0 {
+		return "", fmt.Errorf("messages is empty\n")
+	}
+	stream, err := this.llm.Stream(ctx, messages)
+	if err != nil {
+		return "", fmt.Errorf("ollama mcp model response stream error: %v\n", err)
+	}
+	defer stream.Close()
+	var fullContent strings.Builder
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fullContent.String(), fmt.Errorf("ollama mcp model response stream receive error: %v\n", err)
+		}
+		if len(msg.Content) > 0 {
+			fullContent.WriteString(msg.Content)
+			cb(msg.Content)
+		}
+	}
+	return fullContent.String(), nil
 }
 
 var _ AiModel = (*OllamaMcpModel)(nil)
@@ -512,6 +739,26 @@ func NewOllamaMcpModel(ctx context.Context, username string) (*OllamaMcpModel, e
 }
 
 func (this *OllamaMcpModel) GetMcpClient(ctx context.Context) (*client.Client, error) {
+	mcpConfig := config.Get().McpConfig
+	httpTrans, err := transport.NewStreamableHTTP(mcpConfig.BaseUrl)
+	if err != nil {
+		return nil, fmt.Errorf("create mcp transport error: %v\n", err)
+	}
+	this.mcpClient = client.NewClient(httpTrans)
+	initRequest := mcp.InitializeRequest{}
+	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
+	initRequest.Params.ClientInfo = mcp.Implementation{
+		Name:    "ai-agent-go-mcp-client",
+		Version: "1.0.0",
+	}
+	initRequest.Params.Capabilities = mcp.ClientCapabilities{}
+	if _, err := this.mcpClient.Initialize(ctx, initRequest); err != nil {
+		return nil, fmt.Errorf("mcp client initialize error: %v\n", err)
+	}
+	return this.mcpClient, nil
+}
+
+func (this *OllamaMcpModel) getMcpClient(ctx context.Context) (*client.Client, error) {
 	mcpConfig := config.Get().McpConfig
 	httpTrans, err := transport.NewStreamableHTTP(mcpConfig.BaseUrl)
 	if err != nil {

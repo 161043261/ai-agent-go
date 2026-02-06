@@ -103,7 +103,7 @@ var config = &Config{
 	RagConfig: RagConfig{
 		// ollama: nomic-embed-text
 		// openai: text-embedding-v4
-		EmbeddingModel: "nomic-embed-text", 
+		EmbeddingModel: "nomic-embed-text",
 		DocsDir:        "./docs",
 		Dimension:      1024,
 	},
@@ -112,11 +112,11 @@ var config = &Config{
 	},
 	AiConfig: AiConfig{
 		Provider: "ollama",
-		ApiKey: "",
+		ApiKey:   "",
 		// ollama: qwen2.5:7b, qwen2.5-coder:7
 		// openai: qwen-turbo
 		ModelName: "qwen2.5:7b",
-		BaseUrl: "http://localhost:11434",
+		BaseUrl:   "http://localhost:11434",
 	},
 }
 

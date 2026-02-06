@@ -21,8 +21,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-
-
 type RagIndexer struct {
 	embedder embedding.Embedder
 	indexer  *redisIndexer.Indexer
@@ -36,7 +34,7 @@ type RagQuery struct {
 func createEmbedder(ctx context.Context) (embedding.Embedder, error) {
 	cfg := config.Get()
 	var (
-		aiConfig = cfg.AiConfig
+		aiConfig  = cfg.AiConfig
 		ragConfig = cfg.RagConfig
 	)
 	switch aiConfig.Provider {

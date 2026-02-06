@@ -13,12 +13,12 @@ type AiModelFactory struct {
 }
 
 var (
-	factory AiModelFactory
-	once    sync.Once
+	factory     AiModelFactory
+	factoryOnce sync.Once
 )
 
-func GetFactory() *AiModelFactory {
-	once.Do(func() {
+func GetAiModelFactory() *AiModelFactory {
+	factoryOnce.Do(func() {
 		factory = AiModelFactory{
 			creators: make(map[string]AiModelCreator),
 		}
@@ -27,12 +27,12 @@ func GetFactory() *AiModelFactory {
 	return &factory
 }
 
-func (f *AiModelFactory) registerCreators() {
-	f.creators[OPENAI_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
-		return NewOpenAiModel(ctx)
+func (this *AiModelFactory) registerCreators() {
+	this.creators[OPENAI_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
+		return NewOpenaiModel(ctx)
 	}
 
-	f.creators[OPENAI_RAG_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
+	this.creators[OPENAI_RAG_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
 		username, ok := cfg["username"].(string)
 		if !ok {
 			return nil, fmt.Errorf("RAG model requires username\n")
@@ -40,11 +40,11 @@ func (f *AiModelFactory) registerCreators() {
 		return NewOpenaiRagModel(ctx, username)
 	}
 
-	f.creators[OLLAMA_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
+	this.creators[OLLAMA_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
 		return NewOllamaModel(ctx)
 	}
 
-	f.creators[OLLAMA_RAG_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
+	this.creators[OLLAMA_RAG_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
 		username, ok := cfg["username"].(string)
 		if !ok {
 			return nil, fmt.Errorf("RAG model requires username\n")
@@ -52,11 +52,39 @@ func (f *AiModelFactory) registerCreators() {
 		return NewOllamaRagModel(ctx, username)
 	}
 
-	f.creators[OLLAMA_MCP_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
+	this.creators[OPENAI_MCP_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
 		username, ok := cfg["username"].(string)
 		if !ok {
-			return nil, fmt.Errorf("MCP model requires username\n")
+			return nil, fmt.Errorf("Mcp model requires username\n")
+		}
+		return NewOpenaiMcpModel(ctx, username)
+	}
+
+	this.creators[OLLAMA_MCP_MODEL] = func(ctx context.Context, cfg map[string]any) (AiModel, error) {
+		username, ok := cfg["username"].(string)
+		if !ok {
+			return nil, fmt.Errorf("Mcp model requires username\n")
 		}
 		return NewOllamaMcpModel(ctx, username)
 	}
+}
+
+func (this *AiModelFactory) CreateAiModel(ctx context.Context, modelType string, config map[string]any) (AiModel, error) {
+	creator, ok := this.creators[modelType]
+	if !ok {
+		return nil, fmt.Errorf("unsupported model type: %s\n", modelType)
+	}
+	return creator(ctx, config)
+}
+
+func (this *AiModelFactory) CreateAiAgent(ctx context.Context, modelType, sessionId string, config map[string]any) (*AiAgent, error) {
+	model, err := this.CreateAiModel(ctx, modelType, config)
+	if err != nil {
+		return nil, err
+	}
+	return NewAiAgent(model, sessionId), nil
+}
+
+func (this *AiModelFactory) RegisterModel(modeType string, creator AiModelCreator) {
+	this.creators[modeType] = creator
 }
