@@ -52,7 +52,7 @@ export default function Register() {
         email: form.email,
       });
 
-      if (response.data.status_code === 1000) {
+      if (response.data.code === 1000) {
         toast.success(t("auth.captchaSent"));
         setCountdown(60);
         timerRef.current = setInterval(() => {
@@ -68,7 +68,7 @@ export default function Register() {
           });
         }, 1000);
       } else {
-        toast.error(response.data.status_msg || t("auth.captchaFailed"));
+        toast.error(response.data.message || t("auth.captchaFailed"));
       }
     } catch (error) {
       console.error("Send code error:", error);
@@ -107,11 +107,11 @@ export default function Register() {
         password: form.password,
       });
 
-      if (response.data.status_code === 1000) {
+      if (response.data.code === 1000) {
         toast.success(t("auth.registerSuccess"));
         navigate("/login");
       } else {
-        toast.error(response.data.status_msg || t("auth.registerFailed"));
+        toast.error(response.data.message || t("auth.registerFailed"));
       }
     } catch (error) {
       console.error("Register error:", error);
@@ -147,7 +147,10 @@ export default function Register() {
           <CardContent className="px-10 pb-10">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-muted-foreground text-xs font-medium">
+                <Label
+                  htmlFor="email"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   {t("auth.email")}
                 </Label>
                 <Input
@@ -163,7 +166,10 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="captcha" className="text-muted-foreground text-xs font-medium">
+                <Label
+                  htmlFor="captcha"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   {t("auth.captcha")}
                 </Label>
                 <div className="flex gap-3">
@@ -189,7 +195,10 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-muted-foreground text-xs font-medium">
+                <Label
+                  htmlFor="password"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   {t("auth.password")}
                 </Label>
                 <Input
@@ -205,7 +214,10 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-muted-foreground text-xs font-medium">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   {t("auth.confirmPassword")}
                 </Label>
                 <Input

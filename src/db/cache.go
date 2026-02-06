@@ -57,9 +57,9 @@ func IsRedisEnabled() bool {
 
 func Init() error {
 	mgr := GetCacheManager()
-	cfg := config.GetConfig()
+	cfg := config.Get().RedisConfig
 
-	if cfg.RedisConfig.Enabled {
+	if cfg.Enabled {
 		initRedis()
 
 		if err := testRedisConnection(); err != nil {

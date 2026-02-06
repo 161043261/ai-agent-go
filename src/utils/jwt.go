@@ -14,7 +14,7 @@ type Claims struct {
 }
 
 func JwtToken(id int64, username string) (string, error) {
-	cfg := config.GetConfig().JwtConfig
+	cfg := config.Get().JwtConfig
 	claims := Claims{
 		Id:       id,
 		Username: username,
@@ -32,7 +32,7 @@ func JwtToken(id int64, username string) (string, error) {
 func ParseToken(token string) (string, bool) {
 	claims := new(Claims)
 	t, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
-		return []byte(config.GetConfig().JwtConfig.Key), nil
+		return []byte(config.Get().JwtConfig.Key), nil
 	})
 	if !t.Valid || err != nil || claims == nil {
 		return "", false

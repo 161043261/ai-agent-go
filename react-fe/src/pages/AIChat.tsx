@@ -79,7 +79,7 @@ export default function AIChat() {
       const response = await api.get<SessionsResponse>("/AI/chat/sessions");
       if (
         response.data &&
-        response.data.status_code === 1000 &&
+        response.data.code === 1000 &&
         Array.isArray(response.data.sessions)
       ) {
         const sessionMap: Record<string, Session> = {};
@@ -120,7 +120,7 @@ export default function AIChat() {
         });
         if (
           response.data &&
-          response.data.status_code === 1000 &&
+          response.data.code === 1000 &&
           Array.isArray(response.data.history)
         ) {
           const messages: Message[] = response.data.history.map((item) => ({
@@ -153,7 +153,7 @@ export default function AIChat() {
       });
       if (
         response.data &&
-        response.data.status_code === 1000 &&
+        response.data.code === 1000 &&
         Array.isArray(response.data.history)
       ) {
         const messages: Message[] = response.data.history.map((item) => ({
@@ -359,10 +359,10 @@ export default function AIChat() {
         {
           question,
           modelType: selectedModel,
-        }
+        },
       );
 
-      if (response.data && response.data.status_code === 1000) {
+      if (response.data && response.data.code === 1000) {
         const sessionId = String(response.data.sessionId);
         const aiMessage: Message = {
           role: "assistant",
@@ -381,7 +381,7 @@ export default function AIChat() {
         setTempSession(false);
         setCurrentMessages([{ role: "user", content: question }, aiMessage]);
       } else {
-        toast.error(response.data?.status_msg || t("chat.sendFailed"));
+        toast.error(response.data?.message || t("chat.sendFailed"));
         setCurrentMessages((prev) => prev.slice(0, -1));
       }
     } else {
@@ -391,7 +391,7 @@ export default function AIChat() {
         sessionId: currentSessionId,
       });
 
-      if (response.data && response.data.status_code === 1000) {
+      if (response.data && response.data.code === 1000) {
         const aiMessage: Message = {
           role: "assistant",
           content: response.data.Information || "",
@@ -412,7 +412,7 @@ export default function AIChat() {
           }));
         }
       } else {
-        toast.error(response.data?.status_msg || t("chat.sendFailed"));
+        toast.error(response.data?.message || t("chat.sendFailed"));
         setCurrentMessages((prev) => prev.slice(0, -1));
       }
     }
@@ -425,7 +425,7 @@ export default function AIChat() {
       });
       if (
         createResponse.data &&
-        createResponse.data.status_code === 1000 &&
+        createResponse.data.code === 1000 &&
         createResponse.data.task_id
       ) {
         const taskId = createResponse.data.task_id;
@@ -442,10 +442,10 @@ export default function AIChat() {
             "/AI/chat/tts/query",
             {
               params: { task_id: taskId },
-            }
+            },
           );
 
-          if (queryResponse.data && queryResponse.data.status_code === 1000) {
+          if (queryResponse.data && queryResponse.data.code === 1000) {
             const taskStatus = queryResponse.data.task_status;
 
             if (taskStatus === "Success" && queryResponse.data.task_result) {
@@ -456,7 +456,7 @@ export default function AIChat() {
               attempts++;
               if (attempts < maxAttempts) {
                 await new Promise((resolve) =>
-                  setTimeout(resolve, pollInterval)
+                  setTimeout(resolve, pollInterval),
                 );
                 return await pollResult();
               } else {
@@ -512,18 +512,18 @@ export default function AIChat() {
       formData.append("file", file);
 
       const response = await api.post<{
-        status_code: number;
-        status_msg?: string;
+        code: number;
+        message?: string;
       }>("/file/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      if (response.data && response.data.status_code === 1000) {
+      if (response.data && response.data.code === 1000) {
         toast.success(t("chat.uploadSuccess"));
       } else {
-        toast.error(response.data?.status_msg || t("chat.uploadFailed"));
+        toast.error(response.data?.message || t("chat.uploadFailed"));
       }
     } catch (error) {
       console.error("File upload error:", error);
@@ -543,7 +543,7 @@ export default function AIChat() {
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
       .replace(
         /`(.*?)`/g,
-        "<code class='bg-muted px-1.5 py-0.5 rounded text-sm'>$1</code>"
+        "<code class='bg-muted px-1.5 py-0.5 rounded text-sm'>$1</code>",
       )
       .replace(/\n/g, "<br>");
   };
@@ -616,7 +616,9 @@ export default function AIChat() {
           </Button>
 
           <div className="flex items-center gap-2 ml-4">
-            <span className="text-sm text-muted-foreground">{t("chat.model")}:</span>
+            <span className="text-sm text-muted-foreground">
+              {t("chat.model")}:
+            </span>
             <Select value={selectedModel} onValueChange={setSelectedModel}>
               <SelectTrigger className="w-36 h-9 rounded-md border-input text-sm">
                 <SelectValue />
@@ -694,9 +696,7 @@ export default function AIChat() {
                   {/* Avatar */}
                   <div
                     className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center ${
-                      message.role === "user"
-                        ? "bg-primary"
-                        : "bg-accent"
+                      message.role === "user" ? "bg-primary" : "bg-accent"
                     }`}
                   >
                     {message.role === "user" ? (

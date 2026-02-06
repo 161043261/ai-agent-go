@@ -3,6 +3,7 @@ package db
 import (
 	"ai-agent-go/src/config"
 	"ai-agent-go/src/model"
+	"ai-agent-go/src/utils"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,16 +24,8 @@ var (
 	ctx = context.Background()
 )
 
-func GetIndexName(name string) string {
-	return fmt.Sprintf(config.GetConfig().RedisConfig.Index, name)
-}
-
-func GetIndexNamePrefix(name string) string {
-	return fmt.Sprintf(config.GetConfig().RedisConfig.IndexPrefix, name)
-}
-
 func initRedis() {
-	cfg := config.GetConfig().RedisConfig
+	cfg := config.Get().RedisConfig
 	addr := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -145,4 +138,51 @@ func ClearRedisCache(maxLen int64) error {
 	}
 	ctx := context.Background()
 	return rdb.XTrimMaxLen(ctx, MessageStreamKey, maxLen).Err()
+}
+
+func InitRedisIndex(ctx context.Context, filename string) error {
+	if !IsRedisEnabled() {
+		return fmt.Errorf("redis disabled, cannot initialize redis index")
+	}
+	cfg := config.Get().RagConfig
+	indexName := utils.GetIndexName(filename)
+	_, err := rdb.Do(ctx, "FT.INFO", indexName).Result()
+	if err == nil {
+		log.Println("Redis index already exists")
+	}
+	prefix := utils.GetIndexNamePrefix(filename)
+	args := []any{
+		"FT.CREATE", indexName,
+		"ON", "HASH",
+		"PREFIX", "1", prefix,
+		"SCHEMA",
+		"content", "TEXT",
+		"metadata", "TEXT",
+		"vector", "VECTOR", "FLAT",
+		"6",
+		"TYPE", "FLOAT32",
+		"DIM", cfg.Dimension,
+		"DISTANCE_METRIC", "COSINE",
+	}
+	if err := rdb.Do(ctx, args...); err != nil {
+		return fmt.Errorf("create redis index error: %v", err)
+	}
+	log.Println("Redis index created")
+	return nil
+}
+
+func DeleteRedisIndex(ctx context.Context, filename string) error {
+	if !IsRedisEnabled() {
+		return fmt.Errorf("redis disabled, cannot initialize redis index")
+	}
+	indexName := utils.GetIndexName(filename)
+	if err := rdb.Do(ctx, "FT.DROPINDEX", indexName).Err(); err != nil {
+		return fmt.Errorf("delete redis index error: %v", err)
+	}
+	log.Println("Redis index deleted")
+	return nil
+}
+
+func GetRdb() *redis.Client {
+	return rdb
 }

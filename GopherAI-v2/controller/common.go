@@ -3,8 +3,8 @@ package controller
 import "GopherAI/common/code"
 
 type Response struct {
-	StatusCode code.Code `json:"status_code"`
-	StatusMsg  string    `json:"status_msg,omitempty"`
+	StatusCode code.Code `json:"code"`
+	StatusMsg  string    `json:"message,omitempty"`
 }
 
 func (r *Response) CodeOf(code code.Code) Response {

@@ -27,9 +27,13 @@
   },
   "rag": {
     "embedding_model": "text-embedding-v4",
-    "chat_model": "qwen-turbo",
     "docs_dir": "./docs",
-    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "dimension": 1024
+  },
+  "ai": {
+    "provider": "ollama",
+    "api_key": "",
+    "mode_name": "",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1"
   }
 }

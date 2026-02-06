@@ -41,10 +41,15 @@ type JwtConfig struct {
 
 type RagConfig struct {
 	EmbeddingModel string `json:"embedding_model"`
-	ChatModel      string `json:"chat_model"`
 	DocsDir        string `json:"docs_dir"`
-	BaseUrl        string `json:"base_url"`
 	Dimension      int    `json:"dimension"`
+}
+
+type AiConfig struct {
+	Provider  string `json:"provider"`
+	ApiKey    string `json:"api_key"`
+	ModelName string `json:"model_name"`
+	BaseUrl   string `json:"base_url"`
 }
 
 type Config struct {
@@ -53,6 +58,7 @@ type Config struct {
 	JwtConfig   `json:"jwt"`
 	AppConfig   `json:"app"`
 	RagConfig   `json:"rag"`
+	AiConfig    `json:"ai"`
 }
 
 var config = &Config{
@@ -72,6 +78,6 @@ func init() {
 	}
 }
 
-func GetConfig() *Config {
+func Get() *Config {
 	return config
 }

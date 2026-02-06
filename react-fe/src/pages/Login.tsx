@@ -42,12 +42,12 @@ export default function Login() {
         password: form.password,
       });
 
-      if (response.data.status_code === 1000 && response.data.token) {
+      if (response.data.code === 1000 && response.data.token) {
         setToken(response.data.token);
         toast.success(t("auth.loginSuccess"));
         navigate("/menu");
       } else {
-        toast.error(response.data.status_msg || t("auth.loginFailed"));
+        toast.error(response.data.message || t("auth.loginFailed"));
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -83,7 +83,10 @@ export default function Login() {
           <CardContent className="px-10 pb-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-muted-foreground text-xs font-medium">
+                <Label
+                  htmlFor="username"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   {t("auth.username")}
                 </Label>
                 <Input
@@ -98,7 +101,10 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-muted-foreground text-xs font-medium">
+                <Label
+                  htmlFor="password"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   {t("auth.password")}
                 </Label>
                 <Input

@@ -16,7 +16,7 @@ import (
 var Mysql *gorm.DB
 
 func InitMysql() error {
-	cfg := config.GetConfig().MysqlConfig
+	cfg := config.Get().MysqlConfig
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=true&loc=Local", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Db, cfg.Charset)
 	log.Println("Mysql dsn:", dsn)

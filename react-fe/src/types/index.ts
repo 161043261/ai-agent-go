@@ -1,18 +1,18 @@
 // API Response types
 export interface ApiResponse<T = unknown> {
-  status_code: number;
-  status_msg?: string;
+  code: number;
+  message?: string;
   data?: T;
 }
 
 export interface LoginResponse {
-  status_code: number;
-  status_msg?: string;
+  code: number;
+  message?: string;
   token?: string;
 }
 
 export interface SessionsResponse {
-  status_code: number;
+  code: number;
   sessions: Array<{
     sessionId: string;
     name?: string;
@@ -20,7 +20,7 @@ export interface SessionsResponse {
 }
 
 export interface HistoryResponse {
-  status_code: number;
+  code: number;
   history: Array<{
     is_user: boolean;
     content: string;
@@ -28,14 +28,14 @@ export interface HistoryResponse {
 }
 
 export interface ChatResponse {
-  status_code: number;
-  status_msg?: string;
+  code: number;
+  message?: string;
   sessionId?: string;
   Information?: string;
 }
 
 export interface TTSResponse {
-  status_code: number;
+  code: number;
   task_id?: string;
   task_status?: string;
   task_result?: string;

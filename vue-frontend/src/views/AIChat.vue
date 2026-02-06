@@ -118,7 +118,7 @@ export default {
       try {
         // 创建TTS任务
         const createResponse = await api.post('/AI/chat/tts', { text })
-        if (createResponse.data && createResponse.data.status_code === 1000 && createResponse.data.task_id) {
+        if (createResponse.data && createResponse.data.code === 1000 && createResponse.data.task_id) {
           const taskId = createResponse.data.task_id
           
           // 先等待5秒钟再开始轮询
@@ -132,7 +132,7 @@ export default {
           const pollResult = async () => {
             const queryResponse = await api.get('/AI/chat/tts/query', { params: { task_id: taskId } })
             
-            if (queryResponse.data && queryResponse.data.status_code === 1000) {
+            if (queryResponse.data && queryResponse.data.code === 1000) {
               const taskStatus = queryResponse.data.task_status
                 
               if (taskStatus === 'Success' && queryResponse.data.task_result) {
@@ -181,7 +181,7 @@ export default {
     const loadSessions = async () => {
       try {
         const response = await api.get('/AI/chat/sessions')
-        if (response.data && response.data.status_code === 1000 && Array.isArray(response.data.sessions)) {
+        if (response.data && response.data.code === 1000 && Array.isArray(response.data.sessions)) {
           const sessionMap = {}
           response.data.sessions.forEach(s => {
             const sid = String(s.sessionId)
@@ -217,7 +217,7 @@ export default {
       if (!sessions.value[sessionId].messages || sessions.value[sessionId].messages.length === 0) {
         try {
           const response = await api.post('/AI/chat/history', { sessionId: currentSessionId.value })
-          if (response.data && response.data.status_code === 1000 && Array.isArray(response.data.history)) {
+          if (response.data && response.data.code === 1000 && Array.isArray(response.data.history)) {
             const messages = response.data.history.map(item => ({
               role: item.is_user ? 'user' : 'assistant',
               content: item.content
@@ -242,7 +242,7 @@ export default {
       }
       try {
         const response = await api.post('/AI/chat/history', { sessionId: currentSessionId.value })
-        if (response.data && response.data.status_code === 1000 && Array.isArray(response.data.history)) {
+        if (response.data && response.data.code === 1000 && Array.isArray(response.data.history)) {
           const messages = response.data.history.map(item => ({
             role: item.is_user ? 'user' : 'assistant',
             content: item.content
@@ -460,7 +460,7 @@ export default {
           question: question,
           modelType: selectedModel.value
         })
-        if (response.data && response.data.status_code === 1000) {
+        if (response.data && response.data.code === 1000) {
           const sessionId = String(response.data.sessionId)
           const aiMessage = {
             role: 'assistant',
@@ -476,7 +476,7 @@ export default {
           tempSession.value = false
           currentMessages.value = [...sessions.value[sessionId].messages]
         } else {
-          ElMessage.error(response.data?.status_msg || '发送失败')
+          ElMessage.error(response.data?.message || '发送失败')
 
           currentMessages.value.pop()
         }
@@ -491,12 +491,12 @@ export default {
           modelType: selectedModel.value,
           sessionId: currentSessionId.value
         })
-        if (response.data && response.data.status_code === 1000) {
+        if (response.data && response.data.code === 1000) {
           const aiMessage = { role: 'assistant', content: response.data.Information || '' }
           sessionMsgs.push(aiMessage)
           currentMessages.value = [...sessionMsgs]
         } else {
-          ElMessage.error(response.data?.status_msg || '发送失败')
+          ElMessage.error(response.data?.message || '发送失败')
           sessionMsgs.pop() // rollback
           currentMessages.value.pop()
         }
@@ -546,10 +546,10 @@ export default {
           }
         })
 
-        if (response.data && response.data.status_code === 1000) {
+        if (response.data && response.data.code === 1000) {
           ElMessage.success(`文件上传成功`)
         } else {
-          ElMessage.error(response.data?.status_msg || '上传失败')
+          ElMessage.error(response.data?.message || '上传失败')
         }
       } catch (error) {
         console.error('File upload error:', error)

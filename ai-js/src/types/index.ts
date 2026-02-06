@@ -16,22 +16,22 @@ export enum StatusCode {
 
 // 状态码消息映射
 export const StatusMessage: Record<StatusCode, string> = {
-  [StatusCode.Success]: '操作成功',
-  [StatusCode.InvalidParams]: '请求参数错误',
-  [StatusCode.UserExist]: '用户名已存在',
-  [StatusCode.UserNotExist]: '用户不存在',
-  [StatusCode.InvalidPassword]: '密码错误',
-  [StatusCode.InvalidToken]: '无效的Token',
-  [StatusCode.EmailExist]: '邮箱已被注册',
-  [StatusCode.ServerBusy]: '服务繁忙，请稍后重试',
-  [StatusCode.AIModelFail]: '模型运行失败',
-  [StatusCode.FileUploadFail]: '文件上传失败',
+  [StatusCode.Success]: "操作成功",
+  [StatusCode.InvalidParams]: "请求参数错误",
+  [StatusCode.UserExist]: "用户名已存在",
+  [StatusCode.UserNotExist]: "用户不存在",
+  [StatusCode.InvalidPassword]: "密码错误",
+  [StatusCode.InvalidToken]: "无效的Token",
+  [StatusCode.EmailExist]: "邮箱已被注册",
+  [StatusCode.ServerBusy]: "服务繁忙，请稍后重试",
+  [StatusCode.AIModelFail]: "模型运行失败",
+  [StatusCode.FileUploadFail]: "文件上传失败",
 };
 
 // 通用 API 响应结构
 export interface ApiResponse<T = unknown> {
-  status_code: StatusCode;
-  status_msg?: string;
+  code: StatusCode;
+  message?: string;
   data?: T;
 }
 
@@ -84,7 +84,7 @@ export interface ChatMessage {
 }
 
 // AI 模型相关
-export type ModelType = '1' | '2' | '3' | '4';
+export type ModelType = "1" | "2" | "3" | "4";
 
 export interface AIModelConfig {
   apiKey?: string;
@@ -95,14 +95,14 @@ export interface AIModelConfig {
 
 // Schema Message (用于 AI 模型)
 export interface SchemaMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
 // 缓存类型
 export enum CacheType {
-  Redis = 'redis',
-  Memory = 'memory',
+  Redis = "redis",
+  Memory = "memory",
 }
 
 // 消息队列消息
@@ -158,13 +158,13 @@ export interface AppConfig {
 }
 
 // Fastify 扩展
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyRequest {
     user: JwtPayload;
   }
 }
 
-declare module '@fastify/jwt' {
+declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: JwtPayload;
     user: JwtPayload;

@@ -1,8 +1,8 @@
-import Fastify, { type FastifyInstance } from 'fastify';
-import { getConfig } from './config/index.js';
-import { registerAuthPlugin } from './middleware/auth.middleware.js';
-import { registerRoutes } from './routes/index.js';
-import { logger } from './utils/logger.js';
+import Fastify, { type FastifyInstance } from "fastify";
+import { getConfig } from "./config/index.js";
+import { registerAuthPlugin } from "./middleware/auth.middleware.js";
+import { registerRoutes } from "./routes/index.js";
+import { logger } from "./utils/logger.js";
 
 /**
  * 创建 Fastify 应用实例
@@ -17,13 +17,13 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   // 注册 CORS
-  await app.register(import('@fastify/cors'), {
+  await app.register(import("@fastify/cors"), {
     origin: true,
     credentials: true,
   });
 
   // 注册 Helmet（安全头）
-  await app.register(import('@fastify/helmet'), {
+  await app.register(import("@fastify/helmet"), {
     contentSecurityPolicy: false,
   });
 
@@ -35,19 +35,19 @@ export async function createApp(): Promise<FastifyInstance> {
 
   // 全局错误处理
   app.setErrorHandler((error, request, reply) => {
-    logger.error('Unhandled error:', error);
-    
+    logger.error("Unhandled error:", error);
+
     reply.status(error.statusCode || 500).send({
-      status_code: 4001,
-      status_msg: error.message || '服务器内部错误',
+      code: 4001,
+      message: error.message || "服务器内部错误",
     });
   });
 
   // 404 处理
   app.setNotFoundHandler((request, reply) => {
     reply.status(404).send({
-      status_code: 4004,
-      status_msg: '接口不存在',
+      code: 4004,
+      message: "接口不存在",
     });
   });
 

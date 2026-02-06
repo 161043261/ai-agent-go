@@ -85,12 +85,12 @@ export default {
           username: loginForm.value.username,
           password: loginForm.value.password
         })
-        if (response.data.status_code === 1000) {
+        if (response.data.code === 1000) {
           localStorage.setItem('token', response.data.token)
           ElMessage.success('登录成功')
           router.push('/menu')
         } else {
-          ElMessage.error(response.data.status_msg || '登录失败')
+          ElMessage.error(response.data.message || '登录失败')
         }
       } catch (error) {
         console.error('Login error:', error)

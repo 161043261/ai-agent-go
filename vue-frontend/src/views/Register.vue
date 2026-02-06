@@ -136,7 +136,7 @@ export default {
       try {
         codeLoading.value = true
         const response = await api.post('/user/captcha', { email: registerForm.email })
-        if (response.data.status_code === 1000) {
+        if (response.data.code === 1000) {
           ElMessage.success('验证码发送成功')
           countdown.value = 60
           const timer = setInterval(() => {
@@ -146,7 +146,7 @@ export default {
             }
           }, 1000)
         } else {
-          ElMessage.error(response.data.status_msg || '验证码发送失败')
+          ElMessage.error(response.data.message || '验证码发送失败')
         }
       } catch (error) {
         console.error('Send code error:', error)
@@ -165,11 +165,11 @@ export default {
               captcha: registerForm.captcha,
               password: registerForm.password
         })
-        if (response.data.status_code === 1000) {
+        if (response.data.code === 1000) {
           ElMessage.success('注册成功，请登录')
           router.push('/login')
         } else {
-          ElMessage.error(response.data.status_msg || '注册失败')
+          ElMessage.error(response.data.message || '注册失败')
         }
       } catch (error) {
         console.error('Register error:', error)

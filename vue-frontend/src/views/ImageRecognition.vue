@@ -104,7 +104,7 @@ export default {
         } else {
              messages.value.push({
                  role: 'assistant',
-                 content: `[错误] ${response.data.status_msg || '识别失败'}`,
+                 content: `[错误] ${response.data.message || '识别失败'}`,
              })
         }
       } catch (error) {
