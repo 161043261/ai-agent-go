@@ -121,7 +121,7 @@ var config = &Config{
 }
 
 func init() {
-	data, err := os.ReadFile("config/config.json")
+	data, err := os.ReadFile("config.json")
 	if err != nil {
 		log.Fatal("Read config.json error:", err.Error())
 	}

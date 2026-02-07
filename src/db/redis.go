@@ -62,6 +62,9 @@ func publishMessage2redis(data []byte) error {
 }
 
 func StartRedisMessageConsumer() {
+	if !IsRedisEnabled() {
+		return
+	}
 	go consumeMessagesFromRedis()
 }
 

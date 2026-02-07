@@ -174,8 +174,7 @@ func Delete(key string) error {
 }
 
 func InitMessageQueue() error {
-	manager := GetCacheManager()
-	if manager.provider == PROVIDER_REDIS {
+	if IsRedisEnabled() {
 		return initRedisMessageStream()
 	}
 	log.Println("Bigcache has no message queue")
