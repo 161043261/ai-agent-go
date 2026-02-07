@@ -1,4 +1,4 @@
-package constants
+package code
 
 type Code int
 
@@ -7,7 +7,7 @@ const (
 	ParamsInvalid     Code = 2001
 	UserExist         Code = 2002
 	UserNotExist      Code = 2003
-	PasswordInvalid   Code = 2004
+	PasswordError     Code = 2004
 	PasswordNotMatch  Code = 2005
 	TokenInvalid      Code = 2006
 	NotLogin          Code = 2007
@@ -26,7 +26,7 @@ var phases = map[Code]string{
 	ParamsInvalid:     "Params Invalid",
 	UserExist:         "User Exist",
 	UserNotExist:      "User Not Exist",
-	PasswordInvalid:   "Password Invalid",
+	PasswordError:     "Password Error",
 	PasswordNotMatch:  "Password Not Match",
 	TokenInvalid:      "Token Invalid",
 	NotLogin:          "Not Login",

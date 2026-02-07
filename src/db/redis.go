@@ -61,7 +61,7 @@ func publishMessage2redis(data []byte) error {
 	return err
 }
 
-func startRedisMessageConsumer() {
+func StartRedisMessageConsumer() {
 	go consumeMessagesFromRedis()
 }
 

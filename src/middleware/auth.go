@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"ai-agent-go/src/constants"
+	"ai-agent-go/src/code"
 	"ai-agent-go/src/controller"
 	"ai-agent-go/src/utils"
 	"log"
@@ -23,7 +23,7 @@ func Auth() gin.HandlerFunc {
 		}
 
 		if token == "" {
-			ctx.JSON(http.StatusOK, res.CodeOf(constants.TokenInvalid))
+			ctx.JSON(http.StatusOK, res.CodeOf(code.TokenInvalid))
 			ctx.Abort()
 			return
 		}
@@ -31,7 +31,7 @@ func Auth() gin.HandlerFunc {
 		log.Println("Auth middleware, token:", token)
 		username, ok := utils.ParseToken(token)
 		if !ok {
-			ctx.JSON(http.StatusOK, res.CodeOf(constants.TokenInvalid))
+			ctx.JSON(http.StatusOK, res.CodeOf(code.TokenInvalid))
 			ctx.Abort()
 			return
 		}

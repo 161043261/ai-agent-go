@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ctx = context.Background()
+
 func InsertUser(user *model.User) (*model.User, error) {
 	err := db.Mysql.Create(&user).Error
 	// With id
@@ -26,8 +28,6 @@ func GetUserByEmail(email string) (*model.User, error) {
 	err := db.Mysql.Where("email = ?", email).First(user).Error
 	return user, err
 }
-
-var ctx = context.Background()
 
 func IsUserExistByUsername(username string) (*model.User, bool) {
 	user, err := GetUserByUsername(username)

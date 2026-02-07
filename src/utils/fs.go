@@ -12,7 +12,7 @@ import (
 // rmdir 删除空目录
 // rm 删除文件/目录, 可以递归, 强制
 
-func rmShallow(dir string) error {
+func RmShallow(dir string) error {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {

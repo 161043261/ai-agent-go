@@ -105,6 +105,25 @@ func NewRagIndexer(filename string) (*RagIndexer, error) {
 	}, nil
 }
 
+func (this *RagIndexer) IndexFile(ctx context.Context, filename, fpath string) error {
+	content, err := os.ReadFile(fpath)
+	if err != nil {
+		return fmt.Errorf("read file error: %v\n", err)
+	}
+	doc := &schema.Document{
+		ID:      filename,
+		Content: string(content),
+		MetaData: map[string]any{
+			"file_name": filename,
+			"source":    fpath,
+		},
+	}
+	if _, err := this.indexer.Store(ctx, []*schema.Document{doc}); err != nil {
+		return fmt.Errorf("store document error: %v\n", err)
+	}
+	return nil
+}
+
 func DeleteIndex(ctx context.Context, filename string) error {
 	if err := db.DeleteRedisIndex(ctx, filename); err != nil {
 		return fmt.Errorf("delete redis index error: %v\n", err)
@@ -183,8 +202,8 @@ func getRagQueryByFilenameHof(ctx context.Context, embedder *embedding.Embedder)
 	}
 }
 
-func (r *RagQuery) RetrieveDocuments(ctx context.Context, query string) ([]*schema.Document, error) {
-	docs, err := r.retriever.Retrieve(ctx, query)
+func (this *RagQuery) RetrieveDocuments(ctx context.Context, query string) ([]*schema.Document, error) {
+	docs, err := this.retriever.Retrieve(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("retrieve documents error: %v\n", err)
 	}

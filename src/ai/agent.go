@@ -18,45 +18,45 @@ type AiAgent struct {
 	saveFunc  SaveFunc
 }
 
-func (a *AiAgent) GetModelType() string {
-	return a.model.GetModelType()
+func (this *AiAgent) GetModelType() string {
+	return this.model.GetModelType()
 }
 
-func (a *AiAgent) Response(ctx context.Context, username, userMessage string) (*model.Message, error) {
-	a.AddMessage(userMessage, username, true, true)
-	a.mu.RLock()
+func (this *AiAgent) Response(ctx context.Context, username, userMessage string) (*model.Message, error) {
+	this.AddMessage(userMessage, username, true, true)
+	this.mu.RLock()
 	// model.Message -> schema.Message
-	messages := utils.Convert2schemaMessages(a.messages)
-	a.mu.RUnlock()
-	schemaMessage, err := a.model.Response(ctx, messages)
+	messages := utils.Convert2schemaMessages(this.messages)
+	this.mu.RUnlock()
+	schemaMessage, err := this.model.Response(ctx, messages)
 	if err != nil {
 		return nil, err
 	}
 	// schema.Message -> model.Message
 	aiMessage := &model.Message{
-		SessionId: a.SessionId,
+		SessionId: this.SessionId,
 		Username:  username,
 		Content:   schemaMessage.Content,
 		IsUser:    false,
 	}
-	a.AddMessage(aiMessage.Content, username, true, true)
+	this.AddMessage(aiMessage.Content, username, true, true)
 	return aiMessage, nil
 }
 
-func (a *AiAgent) ResponseStream(ctx context.Context, username, userMessage string, cb StreamCallback) (*model.Message, error) {
-	a.AddMessage(userMessage, username, true, true)
-	a.mu.RLock()
+func (this *AiAgent) ResponseStream(ctx context.Context, username, userMessage string, cb StreamCallback) (*model.Message, error) {
+	this.AddMessage(userMessage, username, true, true)
+	this.mu.RLock()
 	// model.Message -> schema.Message
-	messages := utils.Convert2schemaMessages(a.messages)
-	a.mu.RUnlock()
-	content, err := a.model.ResponseStream(ctx, messages, cb)
+	messages := utils.Convert2schemaMessages(this.messages)
+	this.mu.RUnlock()
+	content, err := this.model.ResponseStream(ctx, messages, cb)
 	if err != nil {
 		return nil, err
 	}
 
 	// string -> model.Message
 	aiMessage := &model.Message{
-		SessionId: a.SessionId,
+		SessionId: this.SessionId,
 		Username:  username,
 		Content:   content,
 		IsUser:    false,
@@ -77,28 +77,28 @@ func NewAiAgent(model_ AiModel, sessionId string) *AiAgent {
 	}
 }
 
-func (a *AiAgent) AddMessage(content string, username string, isUser bool, shouldSave bool) {
+func (this *AiAgent) AddMessage(content string, username string, isUser bool, shouldSave bool) {
 	userMessage := model.Message{
-		SessionId: a.SessionId,
+		SessionId: this.SessionId,
 		Content:   content,
 		Username:  username,
 		IsUser:    isUser,
 	}
-	a.messages = append(a.messages, &userMessage)
+	this.messages = append(this.messages, &userMessage)
 	if shouldSave {
-		a.saveFunc(&userMessage)
+		this.saveFunc(&userMessage)
 	}
 }
 
-func (a *AiAgent) SetSaveFunc(saveFunc SaveFunc) {
-	a.saveFunc = saveFunc
+func (this *AiAgent) SetSaveFunc(saveFunc SaveFunc) {
+	this.saveFunc = saveFunc
 }
 
-func (a *AiAgent) GetMessages() []*model.Message {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	res := make([]*model.Message, len(a.messages))
-	copy(res, a.messages)
+func (this *AiAgent) GetMessages() []*model.Message {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
+	res := make([]*model.Message, len(this.messages))
+	copy(res, this.messages)
 	return res
 }
 

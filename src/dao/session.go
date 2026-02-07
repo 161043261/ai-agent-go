@@ -5,9 +5,8 @@ import (
 	"ai-agent-go/src/model"
 )
 
-func CreateSessions(session *model.Session) (*model.Session, error) {
-	err := db.Mysql.Create(session).Error
-	return session, err
+func CreateSession(session *model.Session) error {
+	return db.Mysql.Create(session).Error
 }
 
 func GetSessionById(sessionId string) (*model.Session, error) {

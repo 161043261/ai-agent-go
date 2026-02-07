@@ -1,23 +1,23 @@
 package controller
 
 import (
-	"ai-agent-go/src/constants"
+	"ai-agent-go/src/code"
 )
 
 type Response struct {
-	Code    constants.Code `json:"code"`
-	Message string         `json:"message,omitempty"`
+	Code    code.Code `json:"code"`
+	Message string    `json:"message,omitempty"`
 }
 
-func (r *Response) CodeOf(code constants.Code) Response {
-	if r == nil {
-		r = new(Response)
+func (this *Response) CodeOf(code code.Code) Response {
+	if this == nil {
+		this = new(Response)
 	}
-	r.Code = code
-	r.Message = code.Message()
-	return *r
+	this.Code = code
+	this.Message = code.Message()
+	return *this
 }
 
-func (r *Response) Success() {
-	r.CodeOf(constants.OK)
+func (this *Response) Success() {
+	this.CodeOf(code.OK)
 }

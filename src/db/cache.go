@@ -55,7 +55,7 @@ func IsRedisEnabled() bool {
 	return GetCacheManager().provider == PROVIDER_REDIS
 }
 
-func Init() error {
+func InitCache() error {
 	mgr := GetCacheManager()
 	redisConfig := config.Get().RedisConfig
 
@@ -76,9 +76,9 @@ func Init() error {
 	return mgr.initBigcache()
 }
 
-func (m *CacheManager) initBigcache() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func (this *CacheManager) initBigcache() error {
+	this.mu.Lock()
+	defer this.mu.Unlock()
 
 	cacheConfig := bigcache.DefaultConfig(10 * time.Minute)
 	cacheConfig.CleanWindow = 5 * time.Minute
@@ -90,8 +90,8 @@ func (m *CacheManager) initBigcache() error {
 	if err != nil {
 		return err
 	}
-	m.cache = cache
-	m.provider = PROVIDER_BIGCACHE
+	this.cache = cache
+	this.provider = PROVIDER_BIGCACHE
 	return nil
 }
 
@@ -171,4 +171,13 @@ func Delete(key string) error {
 		return deleteRedisCache(key)
 	}
 	return mgr.cache.Delete(key)
+}
+
+func InitMessageQueue() error {
+	manager := GetCacheManager()
+	if manager.provider == PROVIDER_REDIS {
+		return initRedisMessageStream()
+	}
+	log.Println("Bigcache has no message queue")
+	return nil
 }

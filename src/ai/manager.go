@@ -18,7 +18,7 @@ func NewAiAgentManager() *AiAgentManager {
 	}
 }
 
-func (this *AiAgentManager) GetOrNewAiAgent(username, sessionId, modelType string, config map[string]any) (*AiAgent, error) {
+func (this *AiAgentManager) GetOrCreateAiAgent(username, sessionId, modelType string, config map[string]any) (*AiAgent, error) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	sessionId2aiAgent, ok := this.username2sessionId2aiAgent[username]
@@ -63,7 +63,7 @@ func (this *AiAgentManager) RemoveAiAgent(username, sessionId string) {
 	}
 }
 
-func (this *AiAgentManager) GetUserAllSessions(username string) []string {
+func (this *AiAgentManager) GetUserAllSessionIds(username string) []string {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
 	sessionId2aiAgent, ok := this.username2sessionId2aiAgent[username]
